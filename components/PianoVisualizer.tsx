@@ -12,6 +12,8 @@ interface PianoVisualizerProps {
   startOctave?: number;
   octaveCount?: number;
   interactive?: boolean;
+  minOctaves?: number; // Minimum octaves needed to show all notes
+  onOctaveChange?: (startOctave: number, octaveCount: number) => void;
 }
 
 const PianoVisualizer: React.FC<PianoVisualizerProps> = ({
@@ -22,6 +24,8 @@ const PianoVisualizer: React.FC<PianoVisualizerProps> = ({
   startOctave = 3,
   octaveCount = 2,
   interactive = true,
+  minOctaves,
+  onOctaveChange,
 }) => {
   const activeTouchesRef = useRef<Map<number, string>>(new Map());
 
@@ -128,8 +132,45 @@ const PianoVisualizer: React.FC<PianoVisualizerProps> = ({
     return leftPercent;
   };
 
+  const canZoomIn = onOctaveChange && octaveCount > (minOctaves || 1);
+  const canZoomOut = onOctaveChange && octaveCount < 4;
+
+  const handleZoomIn = () => {
+    if (!onOctaveChange || octaveCount <= (minOctaves || 1)) return;
+    onOctaveChange(startOctave, octaveCount - 1);
+  };
+
+  const handleZoomOut = () => {
+    if (!onOctaveChange || octaveCount >= 4) return;
+    // When adding an octave, prefer extending downward if possible
+    const newStart = startOctave > 1 ? startOctave - 1 : startOctave;
+    const newCount = newStart < startOctave ? octaveCount + 1 : octaveCount + 1;
+    onOctaveChange(newStart, newCount);
+  };
+
   return (
     <div className="relative w-full select-none touch-none">
+      {/* Zoom controls */}
+      {onOctaveChange && (
+        <div className="absolute top-2 right-2 z-30 flex gap-1">
+          <button
+            onClick={handleZoomOut}
+            disabled={!canZoomOut}
+            aria-label="Show more octaves (smaller keys)"
+            className="w-7 h-7 rounded bg-stone-800/80 text-stone-300 text-sm font-bold flex items-center justify-center disabled:opacity-30 active:bg-stone-700"
+          >
+            &minus;
+          </button>
+          <button
+            onClick={handleZoomIn}
+            disabled={!canZoomIn}
+            aria-label="Show fewer octaves (larger keys)"
+            className="w-7 h-7 rounded bg-stone-800/80 text-stone-300 text-sm font-bold flex items-center justify-center disabled:opacity-30 active:bg-stone-700"
+          >
+            +
+          </button>
+        </div>
+      )}
       {/* Piano container */}
       <div className="relative h-[200px] landscape:h-[40vh] w-full bg-stone-900 rounded-t-lg shadow-2xl border-t-4 border-amber-900/50 overflow-hidden">
 

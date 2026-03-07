@@ -55,8 +55,16 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
   const noteOctaves = exercise.notes.map(n => parseInt(n.replace(/[^0-9]/g, ''))).filter(n => !isNaN(n));
   const minOctave = noteOctaves.length > 0 ? Math.min(...noteOctaves) : 3;
   const maxOctave = noteOctaves.length > 0 ? Math.max(...noteOctaves) : 4;
-  const startOctave = Math.max(2, minOctave);
-  const octaveCount = Math.max(2, maxOctave - startOctave + 1);
+  const baseStartOctave = Math.max(2, minOctave);
+  const baseOctaveCount = Math.max(2, maxOctave - baseStartOctave + 1);
+  const [pianoStart, setPianoStart] = useState(baseStartOctave);
+  const [pianoOctaves, setPianoOctaves] = useState(baseOctaveCount);
+  const handleOctaveChange = (newStart: number, newCount: number) => {
+    if (newCount >= baseOctaveCount) {
+      setPianoStart(Math.min(newStart, baseStartOctave));
+      setPianoOctaves(newCount);
+    }
+  };
 
   // Clean up on unmount
   useEffect(() => {
@@ -370,8 +378,8 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
                     <FallingNotes
                       notes={exercise.notes}
                       currentIndex={currentNoteIndex}
-                      startOctave={startOctave}
-                      octaveCount={octaveCount}
+                      startOctave={pianoStart}
+                      octaveCount={pianoOctaves}
                     />
                   )}
                   <PianoVisualizer
@@ -379,9 +387,11 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
                     activeNote={isPracticeMode ? exercise.notes[currentNoteIndex] : null}
                     successNote={successNote}
                     fingerings={exercise.fingerings}
-                    startOctave={startOctave}
-                    octaveCount={octaveCount}
+                    startOctave={pianoStart}
+                    octaveCount={pianoOctaves}
                     interactive={!isPracticeMode}
+                    minOctaves={baseOctaveCount}
+                    onOctaveChange={handleOctaveChange}
                   />
                 </>
               )}

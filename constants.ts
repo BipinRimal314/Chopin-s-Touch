@@ -59,6 +59,8 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'Mold the hand over the keys like a dome. Knuckles slightly raised.',
       'Do not press down; sink into each key with arm weight.',
       'Each finger lifts only after the next key is fully down (legato).',
+      'Even here, make it sing. A five-finger pattern played beautifully is worth more than a sonata played mechanically.',
+      'Variation: play it forte, then pianissimo. The hand shape stays identical; only the key speed changes.',
     ],
   },
   {
@@ -81,6 +83,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
     tips: [
       'Same dome shape, same relaxation. Mirror, don\'t reinvent.',
       'The thumb (1) starts on F# — let it rest on the black key naturally.',
+      'Variation: play right hand, then left hand, then alternate one note at a time between hands. The handoff should be invisible.',
     ],
   },
   {
@@ -107,6 +110,8 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'The thumb moves laterally under the hand, like a crab.',
       'The wrist stays level. If it dips when the thumb passes, slow down.',
       'This is the foundation of every scale and arpeggio.',
+      'In real music: every scale passage, every arpeggio, every Chopin run depends on this one motion. Master it and the repertoire opens up.',
+      'Variation: try ascending then descending. The descent is harder — the thumb must lead in the opposite direction.',
     ],
   },
   {
@@ -130,6 +135,8 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'Listen for any silence between notes. There should be none.',
       'Listen for any "smudge" where two notes sound together. There should be none.',
       'Play at half the tempo you think is right.',
+      'Imagine each note is a syllable in a sung phrase. The breath between syllables is seamless, but each syllable has its own weight.',
+      'Variation: try emphasizing a different note each time through. How does the phrase\'s meaning change?',
     ],
   },
   {
@@ -150,6 +157,8 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'Evenness is the only goal. Not speed.',
       'Keep fingers 1, 2, and 5 completely relaxed — they should feel dead.',
       'If tension creeps in, stop immediately. Shake out your hand.',
+      'In real music: trills between 3 and 4 appear throughout Chopin\'s Nocturnes. This drill is their foundation.',
+      'Variation: after 8 even repetitions, try accenting every other note. Then every third. This develops rhythmic independence.',
     ],
   },
   {
@@ -171,6 +180,8 @@ export const CHOPIN_EXERCISES: Exercise[] = [
     tips: [
       'Move the wrist laterally to help the fingers reach — don\'t stretch.',
       'The elbow floats slightly outward on the ascent.',
+      'Shape the arpeggio like a vocal phrase: grow louder ascending, softer descending. Even a technical pattern can sing.',
+      'In real music: arpeggiated chords open Chopin\'s Ballade No. 1 and define his Nocturnes. This motion is everywhere.',
     ],
   },
   {
@@ -196,6 +207,8 @@ export const CHOPIN_EXERCISES: Exercise[] = [
     tips: [
       'Stay close to the keys. No finger should lift more than a centimeter.',
       'The thumb slides laterally, never lifts.',
+      'Variation: play it as a whisper (pp), then as a conversation (mf). The finger technique stays identical; only the intention changes.',
+      'In real music: chromatic passages add color and tension. They are the spice in Chopin\'s harmonic palette.',
     ],
   },
   {
@@ -217,6 +230,8 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'The wrist acts as a spring — down and immediately release.',
       'The sound should be crisp and light, never harsh.',
       'If your forearm tenses, you\'re using the wrong muscle group.',
+      'Once comfortable: play the same pattern legato, then staccato, then legato again. Hear how articulation changes the character of identical notes.',
+      'In real music: staccato passages in Chopin\'s Scherzos are electric. This wrist motion is the engine behind them.',
     ],
   },
   {
@@ -238,6 +253,8 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'All three notes must sound at the exact same instant.',
       'Drop into the chord, then immediately relax. The key holds the note, not your muscles.',
       'Try C major, then F major (F-A-C), then G major (G-B-D).',
+      'Each chord has its own emotion. C major is home. F major is warmth. G major is anticipation. Listen to the difference.',
+      'Variation: sustain the chord for four beats, then play it staccato. Both should sound equally full and resonant.',
     ],
   },
   {
@@ -262,6 +279,8 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'Start as quiet as physically possible. Barely touch the key.',
       'Peak volume at G4, then descend back to silence.',
       'Faster key descent = louder. Not more arm weight.',
+      'Think of dynamics as the emotional temperature of a phrase, not just volume. Piano is intimate. Forte is urgent.',
+      'Variation: try the same pattern starting from ff and descending to pp. The emotional arc reverses completely.',
     ],
   },
   {
@@ -288,6 +307,8 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'Think of each scale as a spoken sentence. It has shape.',
       'The pulse stays steady underneath, but the surface breathes.',
       'Chopin: "The left hand is the conductor. The right hand does what it wants."',
+      'This scale is telling a story. The ascent asks a question; the top note is the climax; the descent is the resolution.',
+      'Variation: play with eyes closed. Let your ear guide the phrasing, not your eyes. Trust the hand you have trained.',
     ],
   },
   {
@@ -315,6 +336,8 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'Listen to the decay of each note before playing the next.',
       'Shape the phrase: grow toward A4, then gently descend.',
       'If it doesn\'t sound like singing, slow down until it does.',
+      'Variation: play it once as a question (slight pause before the last note). Then play it as an answer (decisive, no hesitation). Same notes, different meaning.',
+      'This is why we practice technique: so that moments like this, when the music must simply sing, cost us nothing.',
     ],
   },
 
@@ -346,6 +369,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
     tips: [
       'This was NOT Chopin\'s first scale for a reason. B Major teaches the hand shape; C Major tests it.',
       'Master B Major first, then bring that relaxation to C Major.',
+      'Even a C major scale should sound musical. Shape it: start soft, swell in the middle, land gently at the top.',
     ],
   },
   {
@@ -371,6 +395,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
     tips: [
       'Thumb plays only white keys (F and C). The hand stays high on the keyboard.',
       'This feels more natural than C Major — that\'s Chopin\'s whole point.',
+      'Variation: play it as if you are telling someone a secret (pp, intimate) versus announcing something (f, projected).',
     ],
   },
   {
@@ -439,6 +464,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
     tips: [
       'Both notes in each pair must sound at the exact same instant.',
       'Keep the wrist flexible. It rises and falls with the phrase.',
+      'In real music: double thirds appear in Chopin\'s Etude Op. 25 No. 6. This is the door to that world.',
     ],
   },
   {
@@ -459,6 +485,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'This will feel difficult. That is the point.',
       'Evenness matters more than speed. Always.',
       'Rest every 30 seconds. This pair fatigues fast.',
+      'Chopin never tried to make all fingers equal. He wanted each finger to be independently expressive. Finger 4 is tender; finger 5 is bright. Train them, don\'t erase them.',
     ],
   },
 
@@ -481,6 +508,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
     tips: [
       'Listen to the emotional journey: rest, departure, tension, resolution.',
       'This is the skeleton of most music you have ever heard.',
+      'This progression is a sentence. I (C) is the subject. IV (F) is the verb. V (G) is the question mark. I (C) again is the period.',
     ],
   },
   {
@@ -501,6 +529,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
     tips: [
       'Keep this soft and even. The left hand accompanies, it doesn\'t compete.',
       'The pattern should feel like breathing — completely automatic.',
+      'In real music: this pattern underpins Mozart sonatas, Chopin Nocturnes, and pop ballads. It is the heartbeat beneath the melody.',
     ],
   },
 
@@ -526,6 +555,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'Play a note, then wiggle your wrist to verify zero tension.',
       'Only move to the next note when the hand is completely relaxed.',
       'Chopin: "Whoever plays too fast has never truly played slowly."',
+      'Why this matters: speed is a byproduct of relaxed accuracy. You cannot add speed to tense playing; you can only add speed to relaxed playing.',
     ],
   },
   {
@@ -562,6 +592,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'After playing each pair, sing both notes. Can you match the pitch?',
       'The fifth (C-G) sounds "hollow." The third (C-E) sounds "warm."',
       'Minor third (C-Eb) sounds like the beginning of something sad.',
+      'Intervals are the vowels of music. Melodies are just intervals strung together. Learn to hear them and you can hear anything.',
     ],
   },
 
@@ -613,6 +644,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'Left hand plays softly — it supports, it does not compete.',
       'Right hand melody should sing above the bass.',
       'Chopin: "The left hand is the conductor. The right hand does what it wants."',
+      'The right hand speaks the words. The left hand is the tone of voice. Together they make meaning.',
     ],
   },
   {
@@ -637,6 +669,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'Play each pair together in your mind, even though you play them one at a time here.',
       'The hands mirror each other — as one opens, the other closes.',
       'Once comfortable, try playing both notes simultaneously at the piano.',
+      'This is a conversation between two voices. One asks a question (ascending); the other answers (descending).',
     ],
   },
 
@@ -817,6 +850,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'Count aloud: "1, 2, 3-4, 1, 2, 3-4, 1-2-3-4." The half notes last twice as long as the quarters.',
       'Let the half and whole notes ring fully. Do not cut them short.',
       'This pattern teaches you to feel subdivisions of time, not just play notes.',
+      'The short notes are the words; the long notes are the pauses where meaning settles. Music needs both.',
     ],
   },
   {
@@ -844,6 +878,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'Count "1-and-2-and-3-and-4-and" for the eighth notes. Each syllable is one note.',
       'Evenness matters more than speed. Every eighth note should be exactly the same length.',
       'The landing half note at the end should feel like a relief, not a crash.',
+      'Variation: try starting soft and growing louder through the run, then landing quietly. A crescendo run into a soft arrival is one of the most expressive gestures in piano music.',
     ],
   },
   {
@@ -892,6 +927,131 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'Say "tri-po-let" for each group of three. All three syllables must be exactly equal.',
       'The common mistake is turning triplets into dotted rhythms (long-short). They are not the same.',
       'Chopin used triplets constantly, especially in nocturnes. The left hand often plays triplets while the right hand sings in duple time.',
+      'Triplets flow like water. Duple rhythms march like soldiers. Learning to switch between them is learning to speak two dialects of the same language.',
+    ],
+  },
+
+  // --- Finger Character (Chopin's principle: cultivate inequality) ---
+  {
+    id: 'finger-character-thumb',
+    title: 'Thumb: The Anchor',
+    description: 'Chopin rejected the idea of making all fingers equally strong. The thumb is naturally bold and grounding. Use its weight to anchor phrases, then let the lighter fingers dance above it.',
+    category: ExerciseCategory.Musicality,
+    type: ExerciseType.Drill,
+    difficulty: Difficulty.Intermediate,
+    key: 'C Major',
+    hand: 'right' as Hand,
+    notes: ['C4', 'E4', 'G4', 'C4', 'F4', 'A4', 'C4', 'G4', 'E4', 'C4'],
+    fingerings: [
+      { note: 'C4', finger: 1, hand: 'right' },
+      { note: 'E4', finger: 3, hand: 'right' },
+      { note: 'G4', finger: 5, hand: 'right' },
+      { note: 'F4', finger: 4, hand: 'right' },
+      { note: 'A4', finger: 5, hand: 'right' },
+    ],
+    tips: [
+      'Accent the thumb notes (C4) slightly. They are the pillars; the other notes lean on them.',
+      'The thumb provides the bass voice in a melody. Even in a single-line passage, it grounds the harmony.',
+      'Why this matters: in Chopin\'s music, the thumb often carries a hidden inner voice while other fingers play the melody above.',
+    ],
+  },
+  {
+    id: 'finger-character-ring',
+    title: 'Ring Finger: The Singer',
+    description: 'Chopin called finger 4 the "Cinderella" — weakest by nature, but capable of the most tender, singing tone when cultivated. This exercise lets finger 4 carry the melody.',
+    category: ExerciseCategory.Musicality,
+    type: ExerciseType.Drill,
+    difficulty: Difficulty.Intermediate,
+    key: 'E Major',
+    hand: 'right' as Hand,
+    notes: ['G#4', 'A4', 'G#4', 'F#4', 'E4', 'F#4', 'G#4', 'A4', 'B4', 'A4', 'G#4'],
+    fingerings: [
+      { note: 'E4', finger: 1, hand: 'right' },
+      { note: 'F#4', finger: 2, hand: 'right' },
+      { note: 'G#4', finger: 3, hand: 'right' },
+      { note: 'A4', finger: 4, hand: 'right' },
+      { note: 'B4', finger: 5, hand: 'right' },
+    ],
+    tips: [
+      'Let finger 4 (on A4) be the loudest note in each phrase. It carries the emotional peak.',
+      'The weakness of finger 4 produces a naturally soft, singing quality. Do not fight it — use it.',
+      'Variation: play the entire passage with finger 4 slightly louder than the rest. Then reverse: make finger 4 the quietest. Hear how the phrase changes character.',
+      'Chopin: "The fourth finger is like a precious voice that must be carefully drawn out."',
+    ],
+  },
+  {
+    id: 'finger-character-pinky',
+    title: 'Pinky: The Bright Edge',
+    description: 'The pinky sits at the top of every phrase. It is the note the audience hears most clearly. Its job is not power but clarity and brightness.',
+    category: ExerciseCategory.Musicality,
+    type: ExerciseType.Drill,
+    difficulty: Difficulty.Intermediate,
+    key: 'C Major',
+    hand: 'right' as Hand,
+    notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'F4', 'G4', 'E4', 'G4', 'D4', 'G4', 'C4'],
+    fingerings: [
+      { note: 'C4', finger: 1, hand: 'right' },
+      { note: 'D4', finger: 2, hand: 'right' },
+      { note: 'E4', finger: 3, hand: 'right' },
+      { note: 'F4', finger: 4, hand: 'right' },
+      { note: 'G4', finger: 5, hand: 'right' },
+    ],
+    tips: [
+      'The G4 (finger 5) should ring clearly above the other notes. It is the soprano voice.',
+      'Do not force the pinky. Tilt the hand slightly outward to let the pinky\'s natural weight project.',
+      'In real music: the top note of a chord is always the one the ear follows. The pinky must learn to project without strain.',
+      'Why this matters: in Chopin\'s Nocturnes, the melody is almost always in the top voice — your pinky.',
+    ],
+  },
+
+  // --- Bach Fragments (Central to Chopin's curriculum) ---
+  {
+    id: 'bach-invention-1-rh',
+    title: 'Bach Invention No. 1 (RH Fragment)',
+    description: 'Chopin told every student: "Bach is the alpha and omega." This is the opening subject of the most famous Invention — a rising scale fragment that becomes a conversation between two voices. Learn this and you begin to hear polyphony.',
+    category: ExerciseCategory.Musicality,
+    type: ExerciseType.Etude,
+    difficulty: Difficulty.Advanced,
+    key: 'C Major',
+    hand: 'right' as Hand,
+    notes: ['C4', 'D4', 'E4', 'F4', 'D4', 'E4', 'C4', 'E4', 'G4', 'A4', 'F4', 'G4', 'E4', 'F4', 'D4', 'G4'],
+    fingerings: [
+      { note: 'C4', finger: 1, hand: 'right' },
+      { note: 'D4', finger: 2, hand: 'right' },
+      { note: 'E4', finger: 3, hand: 'right' },
+      { note: 'F4', finger: 4, hand: 'right' },
+      { note: 'G4', finger: 5, hand: 'right' },
+      { note: 'A4', finger: 1, hand: 'right' },
+    ],
+    tips: [
+      'This subject is a statement. It rises with purpose, steps back, then leaps forward. Shape it like a spoken declaration.',
+      'Bach wrote this to teach independence of voices. Even this single-line fragment implies two conversations happening at once.',
+      'Play it slowly enough to hear every note ring. Speed destroys the counterpoint that makes Bach worth playing.',
+      'Chopin kept Bach\'s Well-Tempered Clavier on his piano at all times. This was not sentimental — it was pedagogical.',
+    ],
+  },
+  {
+    id: 'bach-invention-8-rh',
+    title: 'Bach Invention No. 8 (RH Fragment)',
+    description: 'A lyrical, singing subject in F major. Where Invention No. 1 is declarative, No. 8 is tender. Bach proves that counterpoint is not just intellectual; it can be deeply emotional.',
+    category: ExerciseCategory.Musicality,
+    type: ExerciseType.Etude,
+    difficulty: Difficulty.Advanced,
+    key: 'F Major',
+    hand: 'right' as Hand,
+    notes: ['F4', 'A4', 'C5', 'A4', 'F4', 'C5', 'A4', 'F4', 'A4', 'G4', 'F4', 'E4', 'F4'],
+    fingerings: [
+      { note: 'F4', finger: 1, hand: 'right' },
+      { note: 'A4', finger: 3, hand: 'right' },
+      { note: 'C5', finger: 5, hand: 'right' },
+      { note: 'G4', finger: 2, hand: 'right' },
+      { note: 'E4', finger: 1, hand: 'right' },
+    ],
+    tips: [
+      'This subject sings. Let it breathe between the arpeggiated leaps and the stepwise descent.',
+      'The descent at the end (A-G-F-E-F) is a sigh. Play it that way — slightly softer, slightly slower.',
+      'Variation: once you know the notes, try shaping the whole phrase in one breath — crescendo to the high C5, then diminuendo to the final F4.',
+      'Why this matters: Chopin\'s own melodic style grew directly from Bach. Hear this and you hear the roots of the Nocturnes.',
     ],
   },
 
@@ -911,6 +1071,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       'If you cannot hear it clearly in your mind, you don\'t know it yet.',
       'Visualize the sensation of the black keys under fingers 2, 3, 4.',
       'This is how concert pianists practice on airplanes.',
+      'Why this matters: the goal of practice is not stronger fingers. It is a clearer internal model of the music. When the inner hearing is vivid, the fingers follow.',
     ],
   },
 ];

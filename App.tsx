@@ -12,6 +12,7 @@ import { Exercise, Piece } from './types';
 import { initAudio } from './utils/audio';
 import { DAILY_DOZEN_IDS } from './constants';
 import { saveSession, markExercisePracticed, markPracticeDay, checkAndUnlockAchievements, resetAllPracticeData } from './utils/storage';
+import { isBluetoothAudioActive } from './utils/bluetooth';
 
 type View = 'daily-dozen' | 'curriculum' | 'pieces' | 'stats' | 'exercise' | 'piece-player' | 'settings';
 
@@ -32,6 +33,7 @@ function App() {
       return JSON.parse(localStorage.getItem('chopins-touch-pieces') || '[]');
     } catch { return []; }
   });
+  const [bluetoothWarning, setBluetoothWarning] = useState(false);
   const audioInitRef = useRef(false);
   const sessionStartRef = useRef<number | null>(null);
   const prevViewRef = useRef(currentView);
@@ -61,6 +63,7 @@ function App() {
 
     if (!wasActive && isActive) {
       sessionStartRef.current = Date.now();
+      isBluetoothAudioActive().then(setBluetoothWarning);
     }
 
     if (wasActive && !isActive && sessionStartRef.current) {
@@ -218,6 +221,20 @@ function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto overscroll-contain">
+        {/* Bluetooth latency warning */}
+        {bluetoothWarning && ['exercise', 'piece-player'].includes(currentView) && (
+          <div className="bg-amber-900/80 border-b border-amber-700 px-4 py-2 flex items-center justify-between">
+            <p className="text-amber-200 text-xs">
+              Bluetooth audio detected. Wireless headphones add ~200ms delay, making real-time practice unreliable. Use wired headphones or speakers.
+            </p>
+            <button
+              onClick={() => setBluetoothWarning(false)}
+              className="text-amber-400 text-xs font-bold ml-3 shrink-0"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         <div className="max-w-5xl mx-auto w-full px-4 py-4">
 
           {currentView === 'daily-dozen' && (

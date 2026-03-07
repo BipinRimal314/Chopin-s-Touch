@@ -108,6 +108,7 @@ export const playNote = (noteName: string, duration = 1.5) => {
   if (!audioContext) {
     ensureAudioReady();
   }
+  if (!audioContext) return;
 
   const freq = NOTE_FREQUENCIES[noteName];
   if (!freq) return;
