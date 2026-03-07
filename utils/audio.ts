@@ -249,10 +249,13 @@ export const stopSequence = (): void => {
  *
  * @param notes - Array of note names to play in order
  * @param bpm - Tempo in beats per minute (default 100)
+ * @param durations - Optional array of duration multipliers relative to a quarter note.
+ *   1 = quarter note, 0.5 = eighth, 2 = half, 4 = whole, 0.333 = triplet eighth, 1.5 = dotted quarter.
+ *   When undefined, all notes are treated as quarter notes (backward compatible).
  */
-export const playSequence = async (notes: string[], bpm: number = 100) => {
+export const playSequence = async (notes: string[], bpm: number = 100, durations?: number[]) => {
   sequenceCancelled = false;
-  const intervalMs = 60000 / bpm;
+  const quarterMs = 60000 / bpm;
 
   // Wait for AudioContext to actually reach 'running' state.
   // On iOS WKWebView, resume() + silent buffer unlock is async —
@@ -271,10 +274,14 @@ export const playSequence = async (notes: string[], bpm: number = 100) => {
     });
   }
 
-  for (const note of notes) {
+  for (let i = 0; i < notes.length; i++) {
     if (sequenceCancelled) return;
+    const note = notes[i];
+    const durationMultiplier = durations?.[i] ?? 1;
+    const intervalMs = quarterMs * durationMultiplier;
     stopNote(note); // Clear any lingering instance of this note
-    playNote(note, Math.min((intervalMs / 1000) * 1.5, 2.0)); // Duration scales with tempo
+    // Sustain length scales with the note's duration, capped at a reasonable max
+    playNote(note, Math.min((intervalMs / 1000) * 1.5, 4.0));
     await new Promise(r => setTimeout(r, intervalMs));
   }
 };

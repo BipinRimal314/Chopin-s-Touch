@@ -1,4 +1,5 @@
 import { Exercise, ExerciseType, Difficulty, NoteConfig, ExerciseCategory, Hand } from './types';
+import type { DynamicLevel } from './utils/dynamics';
 
 export const PIANO_KEYS_OCTAVE: NoteConfig[] = [
   { name: 'C', isBlack: false },
@@ -256,6 +257,7 @@ export const CHOPIN_EXERCISES: Exercise[] = [
       { note: 'F4', finger: 4, hand: 'right' },
       { note: 'G4', finger: 5, hand: 'right' },
     ],
+    targetDynamic: ['pp', 'p', 'mp', 'mf', 'ff', 'mf', 'mp', 'p', 'pp'] as DynamicLevel[],
     tips: [
       'Start as quiet as physically possible. Barely touch the key.',
       'Peak volume at G4, then descend back to silence.',
@@ -787,6 +789,109 @@ export const CHOPIN_EXERCISES: Exercise[] = [
     tips: [
       'The D# pulls strongly toward E — feel that magnetic pull at the top.',
       'Compare with E minor natural (D instead of D#) to hear the difference.',
+    ],
+  },
+
+  // --- Rhythm & Time ---
+  {
+    id: 'rhythm-quarter-half',
+    title: 'Quarter and Half Notes',
+    description: 'The foundation of musical time. Quarter notes get one beat, half notes get two, and the whole note at the end gets four. Listen to how the longer notes create breathing room between phrases.',
+    category: ExerciseCategory.Rhythm,
+    type: ExerciseType.Drill,
+    difficulty: Difficulty.Beginner,
+    key: 'C Major',
+    hand: 'right' as Hand,
+    notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'],
+    durations: [1, 1, 2, 1, 1, 2, 4],
+    fingerings: [
+      { note: 'C4', finger: 1, hand: 'right' },
+      { note: 'D4', finger: 2, hand: 'right' },
+      { note: 'E4', finger: 3, hand: 'right' },
+      { note: 'F4', finger: 4, hand: 'right' },
+      { note: 'G4', finger: 5, hand: 'right' },
+      { note: 'A4', finger: 3, hand: 'right' },
+      { note: 'B4', finger: 4, hand: 'right' },
+    ],
+    tips: [
+      'Count aloud: "1, 2, 3-4, 1, 2, 3-4, 1-2-3-4." The half notes last twice as long as the quarters.',
+      'Let the half and whole notes ring fully. Do not cut them short.',
+      'This pattern teaches you to feel subdivisions of time, not just play notes.',
+    ],
+  },
+  {
+    id: 'rhythm-eighth-runs',
+    title: 'Eighth Note Runs',
+    description: 'Quick eighth notes develop speed and evenness. Eight fast notes climb the scale, then a half note lets the phrase land and breathe. Two notes per beat instead of one.',
+    category: ExerciseCategory.Rhythm,
+    type: ExerciseType.Drill,
+    difficulty: Difficulty.Intermediate,
+    key: 'C Major',
+    hand: 'right' as Hand,
+    notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'C5'],
+    durations: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 2],
+    fingerings: [
+      { note: 'C4', finger: 1, hand: 'right' },
+      { note: 'D4', finger: 2, hand: 'right' },
+      { note: 'E4', finger: 3, hand: 'right' },
+      { note: 'F4', finger: 1, hand: 'right' },
+      { note: 'G4', finger: 2, hand: 'right' },
+      { note: 'A4', finger: 3, hand: 'right' },
+      { note: 'B4', finger: 4, hand: 'right' },
+      { note: 'C5', finger: 5, hand: 'right' },
+    ],
+    tips: [
+      'Count "1-and-2-and-3-and-4-and" for the eighth notes. Each syllable is one note.',
+      'Evenness matters more than speed. Every eighth note should be exactly the same length.',
+      'The landing half note at the end should feel like a relief, not a crash.',
+    ],
+  },
+  {
+    id: 'rhythm-dotted',
+    title: 'Dotted Rhythm',
+    description: 'The dotted quarter followed by an eighth note creates a long-short swing: "DA-da, DA-da." This pattern drives Baroque and Classical music forward. The dot adds half the note\'s value to itself.',
+    category: ExerciseCategory.Rhythm,
+    type: ExerciseType.Drill,
+    difficulty: Difficulty.Intermediate,
+    key: 'C Major',
+    hand: 'right' as Hand,
+    notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'G4', 'E4', 'C4'],
+    durations: [1.5, 0.5, 1.5, 0.5, 1.5, 0.5, 1.5, 0.5, 2],
+    fingerings: [
+      { note: 'C4', finger: 1, hand: 'right' },
+      { note: 'D4', finger: 2, hand: 'right' },
+      { note: 'E4', finger: 3, hand: 'right' },
+      { note: 'F4', finger: 4, hand: 'right' },
+      { note: 'G4', finger: 5, hand: 'right' },
+      { note: 'A4', finger: 3, hand: 'right' },
+    ],
+    tips: [
+      'The long note (dotted quarter) lasts three times as long as the short note (eighth). Feel the asymmetry.',
+      'Do not rush the short note. It should land precisely at the right moment, not early.',
+      'This rhythm appears everywhere: marches, nocturnes, overtures. Master it and you unlock entire repertoires.',
+    ],
+  },
+  {
+    id: 'rhythm-triplets',
+    title: 'Triplet Feel',
+    description: 'Three notes per beat instead of two or four. Triplets create a flowing, waltz-like feel. Each group of three divides one beat into equal thirds. Think "1-trip-let, 2-trip-let."',
+    category: ExerciseCategory.Rhythm,
+    type: ExerciseType.Drill,
+    difficulty: Difficulty.Advanced,
+    key: 'C Major',
+    hand: 'right' as Hand,
+    notes: ['C4', 'E4', 'G4', 'E4', 'G4', 'C5', 'G4', 'E4', 'C4', 'C4'],
+    durations: [0.333, 0.333, 0.333, 0.333, 0.333, 0.333, 0.333, 0.333, 0.333, 2],
+    fingerings: [
+      { note: 'C4', finger: 1, hand: 'right' },
+      { note: 'E4', finger: 3, hand: 'right' },
+      { note: 'G4', finger: 5, hand: 'right' },
+      { note: 'C5', finger: 5, hand: 'right' },
+    ],
+    tips: [
+      'Say "tri-po-let" for each group of three. All three syllables must be exactly equal.',
+      'The common mistake is turning triplets into dotted rhythms (long-short). They are not the same.',
+      'Chopin used triplets constantly, especially in nocturnes. The left hand often plays triplets while the right hand sings in duple time.',
     ],
   },
 

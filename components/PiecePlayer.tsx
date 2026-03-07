@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Piece } from '../types';
 import PianoVisualizer from './PianoVisualizer';
+import FallingNotes from './FallingNotes';
 import { Music, Volume2, Mic, MicOff, Check, RefreshCw, ChevronDown, Timer, Loader2 } from 'lucide-react';
 import { playSequence, stopSequence, ensureAudioReady } from '../utils/audio';
 import { startPitchDetection, normalizeNoteName } from '../utils/pitchDetection';
@@ -291,15 +292,25 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
                 </div>
               </div>
             ) : (
-              <PianoVisualizer
-                highlightedNotes={isPracticeMode ? [] : activeSection.notes}
-                activeNote={isPracticeMode ? activeSection.notes[currentNoteIndex] : null}
-                successNote={successNote}
-                fingerings={activeSection.fingerings}
-                startOctave={startOctave}
-                octaveCount={octaveCount}
-                interactive={!isPracticeMode}
-              />
+              <>
+                {isPracticeMode && (
+                  <FallingNotes
+                    notes={activeSection.notes}
+                    currentIndex={currentNoteIndex}
+                    startOctave={startOctave}
+                    octaveCount={octaveCount}
+                  />
+                )}
+                <PianoVisualizer
+                  highlightedNotes={isPracticeMode ? [] : activeSection.notes}
+                  activeNote={isPracticeMode ? activeSection.notes[currentNoteIndex] : null}
+                  successNote={successNote}
+                  fingerings={activeSection.fingerings}
+                  startOctave={startOctave}
+                  octaveCount={octaveCount}
+                  interactive={!isPracticeMode}
+                />
+              </>
             )}
 
             {micError && (

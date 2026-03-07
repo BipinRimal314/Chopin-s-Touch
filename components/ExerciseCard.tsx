@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Exercise, ExerciseType } from '../types';
 import PianoVisualizer from './PianoVisualizer';
+import FallingNotes from './FallingNotes';
+import DynamicsMeter from './DynamicsMeter';
 import { Music, Volume2, Mic, MicOff, Check, RefreshCw, Info, Brain, BookOpen, Timer, Loader2 } from 'lucide-react';
 import { playSequence, stopSequence, ensureAudioReady } from '../utils/audio';
 import { startPitchDetection, normalizeNoteName } from '../utils/pitchDetection';
+import { startDynamicsDetection } from '../utils/dynamics';
+import type { DynamicLevel } from '../utils/dynamics';
 import { startMetronome, stopMetronome, setMetronomeBPM } from '../utils/metronome';
 import { markExercisePracticed, saveBestAccuracy, unlockAchievement } from '../utils/storage';
 import { successHaptic } from '../utils/haptics';
@@ -25,11 +29,24 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
   const [isMicLoading, setIsMicLoading] = useState(false);
   const [missCount, setMissCount] = useState(0);
 
+  // Dynamics detection state
+  const [currentDynamic, setCurrentDynamic] = useState<DynamicLevel>('pp');
+  const [currentRms, setCurrentRms] = useState(0);
+
   const stopListeningRef = useRef<(() => void) | null>(null);
+  const stopDynamicsRef = useRef<(() => void) | null>(null);
   const debounceRef = useRef<number | null>(null);
   const missDebounceRef = useRef<number | null>(null);
 
   const hasNotes = exercise.notes.length > 0;
+  const hasDynamics = !!(exercise.targetDynamic && exercise.targetDynamic.length > 0);
+
+  // Current target dynamic for the active note (supports per-note or single-value arrays)
+  const currentTargetDynamic: DynamicLevel | null = hasDynamics
+    ? (exercise.targetDynamic!.length === 1
+        ? exercise.targetDynamic![0]
+        : exercise.targetDynamic![currentNoteIndex] ?? null)
+    : null;
 
   // Dynamic octave range based on exercise notes
   const noteOctaves = exercise.notes.map(n => parseInt(n.replace(/[^0-9]/g, ''))).filter(n => !isNaN(n));
@@ -42,6 +59,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
   useEffect(() => {
     return () => {
       if (stopListeningRef.current) stopListeningRef.current();
+      if (stopDynamicsRef.current) stopDynamicsRef.current();
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
       if (missDebounceRef.current) window.clearTimeout(missDebounceRef.current);
       stopMetronome();
@@ -62,7 +80,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
     }
     if (isPracticeMode) handleTogglePractice();
     setIsPlayingDemo(true);
-    await playSequence(exercise.notes, tempo);
+    await playSequence(exercise.notes, tempo, exercise.durations);
     setIsPlayingDemo(false);
   };
 
@@ -73,15 +91,23 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
       setSuccessNote(null);
       setCurrentNoteIndex(0);
       setMissCount(0);
+      setCurrentDynamic('pp');
+      setCurrentRms(0);
       if (stopListeningRef.current) {
         stopListeningRef.current();
         stopListeningRef.current = null;
+      }
+      if (stopDynamicsRef.current) {
+        stopDynamicsRef.current();
+        stopDynamicsRef.current = null;
       }
     } else {
       setIsPracticeMode(true);
       setCurrentNoteIndex(0);
       setSuccessNote(null);
       setMissCount(0);
+      setCurrentDynamic('pp');
+      setCurrentRms(0);
       setIsMicLoading(true);
 
       try {
@@ -90,6 +116,16 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
            setDetectedNote(note);
         });
         stopListeningRef.current = stopFn;
+
+        // Start dynamics detection alongside pitch detection if exercise has targets.
+        // Uses a separate AudioContext + AnalyserNode so the two don't interfere.
+        if (hasDynamics) {
+          const stopDyn = await startDynamicsDetection((level, rms) => {
+            setCurrentDynamic(level);
+            setCurrentRms(rms);
+          });
+          stopDynamicsRef.current = stopDyn;
+        }
       } catch (e: any) {
         const msg = e?.message || 'Microphone access failed';
         console.error("Failed to start pitch detection:", msg);
@@ -279,6 +315,17 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
                 </div>
               )}
 
+              {/* Dynamics Meter — shown above the piano when exercise has target dynamics */}
+              {isPracticeMode && hasDynamics && !isComplete && (
+                <div className="mb-3 p-3 bg-stone-900/60 rounded-lg border border-stone-800/50 h-[100px]">
+                  <DynamicsMeter
+                    currentLevel={currentDynamic}
+                    targetLevel={currentTargetDynamic}
+                    rms={currentRms}
+                  />
+                </div>
+              )}
+
               {isComplete ? (
                 <div className="h-[200px] flex flex-col items-center justify-center bg-stone-900/80 rounded-lg">
                   <div className="w-16 h-16 bg-green-900/30 rounded-full flex items-center justify-center mb-3 border border-green-500/30">
@@ -296,15 +343,25 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
                   </button>
                 </div>
               ) : (
-                <PianoVisualizer
-                  highlightedNotes={isPracticeMode ? [] : exercise.notes}
-                  activeNote={isPracticeMode ? exercise.notes[currentNoteIndex] : null}
-                  successNote={successNote}
-                  fingerings={exercise.fingerings}
-                  startOctave={startOctave}
-                  octaveCount={octaveCount}
-                  interactive={!isPracticeMode}
-                />
+                <>
+                  {isPracticeMode && (
+                    <FallingNotes
+                      notes={exercise.notes}
+                      currentIndex={currentNoteIndex}
+                      startOctave={startOctave}
+                      octaveCount={octaveCount}
+                    />
+                  )}
+                  <PianoVisualizer
+                    highlightedNotes={isPracticeMode ? [] : exercise.notes}
+                    activeNote={isPracticeMode ? exercise.notes[currentNoteIndex] : null}
+                    successNote={successNote}
+                    fingerings={exercise.fingerings}
+                    startOctave={startOctave}
+                    octaveCount={octaveCount}
+                    interactive={!isPracticeMode}
+                  />
+                </>
               )}
 
               {/* Mic Error */}

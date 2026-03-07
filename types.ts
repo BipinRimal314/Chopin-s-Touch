@@ -1,3 +1,5 @@
+import type { DynamicLevel } from './utils/dynamics';
+
 export enum Difficulty {
   Beginner = 'Beginner',
   Intermediate = 'Intermediate',
@@ -18,6 +20,7 @@ export enum ExerciseCategory {
   Technical = 'Technical Skills',
   HandCoordination = 'Hand Coordination',
   Musicality = 'Musicality & Expression',
+  Rhythm = 'Rhythm & Time',
   Habits = 'Practice Habits',
   Theory = 'Music Theory & Ear Training',
   Performance = 'Performance & Mindset',
@@ -48,8 +51,10 @@ export interface Exercise {
   key: string;
   hand?: Hand; // defaults to 'right' if not specified
   notes: string[]; // List of notes for visualizer, e.g., ["B3", "C#4", "D#4"...]
+  durations?: number[]; // Note duration multipliers relative to a quarter note (1=quarter, 0.5=eighth, 2=half, 4=whole, 0.333=triplet, 1.5=dotted quarter). When undefined, all notes are quarter notes.
   fingerings: KeyFinger[]; // Visual cues
   tips: string[]; // Chopin method specific tips
+  targetDynamic?: DynamicLevel[]; // One per note, or a single value for the whole exercise
 }
 
 // Piece system
