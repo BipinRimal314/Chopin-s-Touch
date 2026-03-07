@@ -258,22 +258,32 @@ export const playSequence = async (notes: string[], bpm: number = 100, durations
   sequenceCancelled = false;
   const quarterMs = 60000 / bpm;
 
-  // Wait for AudioContext to actually reach 'running' state.
-  // On iOS WKWebView, resume() + silent buffer unlock is async —
-  // oscillators created before the context is running produce no sound.
-  if (audioContext && audioContext.state !== 'running') {
+  // Ensure AudioContext exists (caller should have called ensureAudioReady()
+  // synchronously in their tap handler, but guard against missing context)
+  if (!audioContext) createContext();
+  if (!audioContext) return;
+
+  // On iOS WKWebView, resume() + silent buffer unlock initiated by
+  // ensureAudioReady() is async. The context transitions to 'running'
+  // some time after the synchronous gesture handler completes.
+  // We must NOT call resume() again here (outside the gesture stack,
+  // iOS ignores it). Instead, poll until the gesture handler's resume()
+  // takes effect.
+  if (audioContext.state !== 'running') {
     await new Promise<void>((resolve) => {
-      const onStateChange = () => {
-        if (audioContext?.state === 'running') {
-          audioContext.removeEventListener('statechange', onStateChange);
+      const interval = setInterval(() => {
+        if (!audioContext || audioContext.state === 'running') {
+          clearInterval(interval);
           resolve();
         }
-      };
-      audioContext!.addEventListener('statechange', onStateChange);
-      // Safety: don't wait forever if state never changes
-      setTimeout(resolve, 500);
+      }, 10);
+      // Don't hang forever if the context never unlocks
+      setTimeout(() => { clearInterval(interval); resolve(); }, 1000);
     });
   }
+
+  // Context never reached 'running' — no sound possible
+  if (!audioContext || audioContext.state !== 'running') return;
 
   for (let i = 0; i < notes.length; i++) {
     if (sequenceCancelled) return;

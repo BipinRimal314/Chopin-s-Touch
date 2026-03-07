@@ -243,3 +243,6 @@ From his unfinished *Projet de Methode* and student accounts (Eigeldinger, 1987)
 - [Why Piano Apps Fail — Newstrail](https://www.newstrail.com/why-many-piano-learning-apps-struggle-to-teach-music/)
 - [Capacitor iOS Deployment — Capacitor Docs](https://capacitorjs.com/docs/ios/deploying-to-app-store)
 - Full competitor research with 40+ sources: `competitor-research.md`
+
+
+Upon further testing, 
