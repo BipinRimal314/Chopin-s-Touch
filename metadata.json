@@ -1,0 +1,7 @@
+{
+  "name": "Chopin's Touch",
+  "description": "A piano practice companion focusing on the Chopin method of natural hand physiology. Features guided exercises, visual aids for B Major/polyphonic textures, and an AI practice coach.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
