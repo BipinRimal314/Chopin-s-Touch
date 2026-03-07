@@ -5,6 +5,7 @@ import { Music, Volume2, Mic, MicOff, Check, RefreshCw, Info, Brain, BookOpen, T
 import { playSequence, stopSequence, ensureAudioReady } from '../utils/audio';
 import { startPitchDetection, normalizeNoteName } from '../utils/pitchDetection';
 import { startMetronome, stopMetronome, setMetronomeBPM } from '../utils/metronome';
+import { markExercisePracticed, saveBestAccuracy, unlockAchievement } from '../utils/storage';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -21,17 +22,27 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
   const [metronomeOn, setMetronomeOn] = useState(false);
   const [micError, setMicError] = useState<string | null>(null);
   const [isMicLoading, setIsMicLoading] = useState(false);
+  const [missCount, setMissCount] = useState(0);
 
   const stopListeningRef = useRef<(() => void) | null>(null);
   const debounceRef = useRef<number | null>(null);
+  const missDebounceRef = useRef<number | null>(null);
 
   const hasNotes = exercise.notes.length > 0;
+
+  // Dynamic octave range based on exercise notes
+  const noteOctaves = exercise.notes.map(n => parseInt(n.replace(/[^0-9]/g, ''))).filter(n => !isNaN(n));
+  const minOctave = noteOctaves.length > 0 ? Math.min(...noteOctaves) : 3;
+  const maxOctave = noteOctaves.length > 0 ? Math.max(...noteOctaves) : 4;
+  const startOctave = Math.max(2, minOctave);
+  const octaveCount = Math.max(2, maxOctave - startOctave + 1);
 
   // Clean up on unmount
   useEffect(() => {
     return () => {
       if (stopListeningRef.current) stopListeningRef.current();
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
+      if (missDebounceRef.current) window.clearTimeout(missDebounceRef.current);
       stopMetronome();
     };
   }, []);
@@ -42,7 +53,6 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
   }, [tempo, metronomeOn]);
 
   const handlePlayDemo = async () => {
-    // MUST be first — iOS WKWebView requires resume() in the synchronous tap stack
     ensureAudioReady();
     if (isPlayingDemo) {
       stopSequence();
@@ -61,6 +71,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
       setDetectedNote(null);
       setSuccessNote(null);
       setCurrentNoteIndex(0);
+      setMissCount(0);
       if (stopListeningRef.current) {
         stopListeningRef.current();
         stopListeningRef.current = null;
@@ -69,6 +80,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
       setIsPracticeMode(true);
       setCurrentNoteIndex(0);
       setSuccessNote(null);
+      setMissCount(0);
       setIsMicLoading(true);
 
       try {
@@ -92,6 +104,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
      setCurrentNoteIndex(0);
      setSuccessNote(null);
      setDetectedNote(null);
+     setMissCount(0);
   };
 
   const toggleMetronome = () => {
@@ -104,7 +117,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
     }
   };
 
-  // Logic to check if played note matches target
+  // Pitch matching with accuracy tracking
   useEffect(() => {
     if (!isPracticeMode) return;
 
@@ -123,10 +136,28 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
              debounceRef.current = null;
           }, 400);
        }
+    } else {
+      // Count miss (debounced — max 1 per second to avoid noise)
+      if (missDebounceRef.current === null) {
+        setMissCount(prev => prev + 1);
+        missDebounceRef.current = window.setTimeout(() => {
+          missDebounceRef.current = null;
+        }, 1000);
+      }
     }
   }, [detectedNote, currentNoteIndex, exercise.notes, isPracticeMode]);
 
   const isComplete = isPracticeMode && currentNoteIndex >= exercise.notes.length;
+  const accuracy = isComplete ? Math.round((exercise.notes.length / (exercise.notes.length + missCount)) * 100) : 0;
+
+  // Save accuracy when practice completes
+  useEffect(() => {
+    if (isComplete) {
+      saveBestAccuracy(exercise.id, accuracy);
+      markExercisePracticed(exercise.id);
+      if (accuracy === 100) unlockAchievement('perfect-score');
+    }
+  }, [isComplete]);
 
   // Hand indicator label
   const handLabel = exercise.hand === 'left' ? 'LH' : exercise.hand === 'both' ? 'Both' : 'RH';
@@ -247,14 +278,17 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
               )}
 
               {isComplete ? (
-                <div className="h-[200px] flex flex-col items-center justify-center bg-stone-900/80 rounded-lg animate-in fade-in">
-                  <div className="w-16 h-16 bg-green-900/30 rounded-full flex items-center justify-center mb-4 border border-green-500/30">
+                <div className="h-[200px] flex flex-col items-center justify-center bg-stone-900/80 rounded-lg">
+                  <div className="w-16 h-16 bg-green-900/30 rounded-full flex items-center justify-center mb-3 border border-green-500/30">
                     <Check size={32} className="text-green-500" />
                   </div>
                   <h3 className="text-xl font-serif text-stone-100">Exercise Complete!</h3>
+                  <div className={`text-lg font-bold mt-1 ${accuracy === 100 ? 'text-green-400' : accuracy >= 80 ? 'text-amber-400' : 'text-stone-400'}`}>
+                    {accuracy}% accuracy
+                  </div>
                   <button
                     onClick={handleResetPractice}
-                    className="mt-4 flex items-center gap-2 text-stone-400 active:text-amber-500 min-h-[44px] min-w-[44px] justify-center"
+                    className="mt-3 flex items-center gap-2 text-stone-400 active:text-amber-500 min-h-[44px] min-w-[44px] justify-center"
                   >
                     <RefreshCw size={14} /> Practice Again
                   </button>
@@ -265,8 +299,8 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
                   activeNote={isPracticeMode ? exercise.notes[currentNoteIndex] : null}
                   successNote={successNote}
                   fingerings={exercise.fingerings}
-                  startOctave={3}
-                  octaveCount={2}
+                  startOctave={startOctave}
+                  octaveCount={octaveCount}
                   interactive={!isPracticeMode}
                 />
               )}

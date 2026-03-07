@@ -5,6 +5,7 @@ import { Music, Volume2, Mic, MicOff, Check, RefreshCw, ChevronDown, Timer, Load
 import { playSequence, stopSequence, stopNote, ensureAudioReady } from '../utils/audio';
 import { startPitchDetection, normalizeNoteName } from '../utils/pitchDetection';
 import { startMetronome, stopMetronome, setMetronomeBPM } from '../utils/metronome';
+import { saveBestAccuracy } from '../utils/storage';
 
 interface PiecePlayerProps {
   piece: Piece;
@@ -23,9 +24,11 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
   const [completedSections, setCompletedSections] = useState<Set<number>>(new Set());
   const [micError, setMicError] = useState<string | null>(null);
   const [isMicLoading, setIsMicLoading] = useState(false);
+  const [missCount, setMissCount] = useState(0);
 
   const stopListeningRef = useRef<(() => void) | null>(null);
   const debounceRef = useRef<number | null>(null);
+  const missDebounceRef = useRef<number | null>(null);
 
   const activeSection = piece.sections[activeSectionIdx];
 
@@ -42,6 +45,7 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
     return () => {
       if (stopListeningRef.current) stopListeningRef.current();
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
+      if (missDebounceRef.current) window.clearTimeout(missDebounceRef.current);
       stopMetronome();
     };
   }, []);
@@ -99,6 +103,7 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
     setCurrentNoteIndex(0);
     setSuccessNote(null);
     setDetectedNote(null);
+    setMissCount(0);
   };
 
   const toggleMetronome = () => {
@@ -129,17 +134,27 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
           debounceRef.current = null;
         }, 400);
       }
+    } else if (missDebounceRef.current === null) {
+      setMissCount(prev => prev + 1);
+      missDebounceRef.current = window.setTimeout(() => {
+        missDebounceRef.current = null;
+      }, 1000);
     }
   }, [detectedNote, currentNoteIndex, activeSection.notes, isPracticeMode]);
 
   const isSectionComplete = isPracticeMode && currentNoteIndex >= activeSection.notes.length;
 
+  const sectionAccuracy = activeSection.notes.length > 0
+    ? Math.round((activeSection.notes.length / (activeSection.notes.length + missCount)) * 100)
+    : 100;
+
   // When section is completed via practice mode
   useEffect(() => {
     if (isSectionComplete) {
       setCompletedSections(prev => new Set(prev).add(activeSectionIdx));
+      saveBestAccuracy(`piece-${piece.id}-s${activeSectionIdx}`, sectionAccuracy);
     }
-  }, [isSectionComplete, activeSectionIdx]);
+  }, [isSectionComplete, activeSectionIdx, sectionAccuracy, piece.id]);
 
   const allSectionsCompleted = completedSections.size === piece.sections.length;
 
@@ -247,6 +262,9 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
                   <Check size={32} className="text-green-500" />
                 </div>
                 <h3 className="text-xl font-serif text-stone-100">Section Complete!</h3>
+                <p className={`text-sm mt-1 ${sectionAccuracy === 100 ? 'text-green-400' : sectionAccuracy >= 80 ? 'text-amber-400' : 'text-stone-400'}`}>
+                  Accuracy: {sectionAccuracy}%
+                </p>
                 <div className="flex gap-3 mt-4">
                   <button onClick={handleResetSection} className="flex items-center gap-2 text-stone-400 active:text-amber-500 min-h-[44px] px-3">
                     <RefreshCw size={14} /> Again

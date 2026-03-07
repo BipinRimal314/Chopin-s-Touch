@@ -47,7 +47,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetProgress }) => {
           <RotateCcw size={16} />
           Progress
         </h3>
-        <p className="text-stone-500 text-xs mb-4">Reset all completed exercises and practice history.</p>
+        <p className="text-stone-500 text-xs mb-4">Reset all completed exercises, streaks, session history, accuracy records, and achievements.</p>
         {showResetConfirm ? (
           <div className="flex gap-3">
             <button

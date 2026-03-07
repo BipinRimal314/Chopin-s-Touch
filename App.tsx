@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ListTodo, Library, BookOpen, Settings as SettingsIcon } from 'lucide-react';
+import { ListTodo, Library, BookOpen, BarChart3, Settings as SettingsIcon } from 'lucide-react';
 import CategoryView from './components/CategoryView';
 import DailyDozenList from './components/DailyDozenList';
 import ExerciseCard from './components/ExerciseCard';
 import PiecesList from './components/PiecesList';
 import PiecePlayer from './components/PiecePlayer';
 import Settings from './components/Settings';
+import StatsView from './components/StatsView';
 import PracticeTimer from './components/PracticeTimer';
 import { Exercise, Piece } from './types';
 import { initAudio } from './utils/audio';
+import { DAILY_DOZEN_IDS } from './constants';
+import { saveSession, markExercisePracticed, markPracticeDay, checkAndUnlockAchievements, resetAllPracticeData } from './utils/storage';
 
-type View = 'daily-dozen' | 'curriculum' | 'pieces' | 'exercise' | 'piece-player' | 'settings';
+type View = 'daily-dozen' | 'curriculum' | 'pieces' | 'stats' | 'exercise' | 'piece-player' | 'settings';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>(() => {
@@ -30,6 +33,8 @@ function App() {
     } catch { return []; }
   });
   const audioInitRef = useRef(false);
+  const sessionStartRef = useRef<number | null>(null);
+  const prevViewRef = useRef(currentView);
 
   // Unlock iOS AudioContext on first user interaction
   useEffect(() => {
@@ -48,6 +53,24 @@ function App() {
       document.removeEventListener('click', unlock);
     };
   }, []);
+
+  // Track session timing when entering/leaving exercise or piece views
+  useEffect(() => {
+    const wasActive = ['exercise', 'piece-player'].includes(prevViewRef.current);
+    const isActive = ['exercise', 'piece-player'].includes(currentView);
+
+    if (!wasActive && isActive) {
+      sessionStartRef.current = Date.now();
+    }
+
+    if (wasActive && !isActive && sessionStartRef.current) {
+      const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000);
+      saveSession(elapsed);
+      sessionStartRef.current = null;
+    }
+
+    prevViewRef.current = currentView;
+  }, [currentView]);
 
   // Save completed exercises to localStorage
   useEffect(() => {
@@ -83,16 +106,19 @@ function App() {
   };
 
   const handleCompleteExercise = (id: string) => {
-    if (!completedExercises.includes(id)) {
-      setCompletedExercises(prev => [...prev, id]);
-    }
+    const updated = completedExercises.includes(id) ? completedExercises : [...completedExercises, id];
+    setCompletedExercises(updated);
+    markExercisePracticed(id);
+    markPracticeDay();
+    checkAndUnlockAchievements(updated, completedPieces, DAILY_DOZEN_IDS);
     setCurrentView(previousView);
   };
 
   const handleCompletePiece = (id: string) => {
-    if (!completedPieces.includes(id)) {
-      setCompletedPieces(prev => [...prev, id]);
-    }
+    const updated = completedPieces.includes(id) ? completedPieces : [...completedPieces, id];
+    setCompletedPieces(updated);
+    markPracticeDay();
+    checkAndUnlockAchievements(completedExercises, updated, DAILY_DOZEN_IDS);
     setCurrentView('pieces');
   };
 
@@ -101,6 +127,7 @@ function App() {
     setCompletedPieces([]);
     localStorage.removeItem('chopins-touch-completed');
     localStorage.removeItem('chopins-touch-pieces');
+    resetAllPracticeData();
   };
 
   const viewTitle = () => {
@@ -108,6 +135,7 @@ function App() {
       case 'daily-dozen': return 'Daily Dozen';
       case 'curriculum': return 'Curriculum';
       case 'pieces': return 'Learn';
+      case 'stats': return 'Progress';
       case 'exercise': return selectedExercise?.title || 'Exercise';
       case 'piece-player': return selectedPiece?.title || 'Piece';
       case 'settings': return 'Settings';
@@ -118,14 +146,14 @@ function App() {
     <button
       onClick={() => setCurrentView(view)}
       className={`
-        flex flex-col items-center justify-center gap-1 py-2 px-5 min-w-[80px] min-h-[48px] rounded-xl transition-colors
+        flex flex-col items-center justify-center gap-1 py-2 px-4 min-w-[70px] min-h-[48px] rounded-xl transition-colors
         ${currentView === view
           ? 'text-amber-500'
           : 'text-stone-500 active:text-stone-300'}
       `}
     >
       <Icon size={22} strokeWidth={currentView === view ? 2.5 : 1.5} />
-      <span className={`text-[11px] tracking-wide ${currentView === view ? 'font-semibold' : 'font-normal'}`}>
+      <span className={`text-[10px] tracking-wide ${currentView === view ? 'font-semibold' : 'font-normal'}`}>
         {label}
       </span>
     </button>
@@ -230,6 +258,12 @@ function App() {
             </div>
           )}
 
+          {currentView === 'stats' && (
+            <div className="animate-fade-in">
+              <StatsView onSelectExercise={handleSelectExercise} />
+            </div>
+          )}
+
           {currentView === 'exercise' && selectedExercise && (
             <div className="animate-fade-in">
               <ExerciseCard
@@ -263,6 +297,7 @@ function App() {
           <TabButton view="daily-dozen" icon={ListTodo} label="Daily Dozen" />
           <TabButton view="curriculum" icon={Library} label="Curriculum" />
           <TabButton view="pieces" icon={BookOpen} label="Learn" />
+          <TabButton view="stats" icon={BarChart3} label="Progress" />
         </div>
       </nav>
     </div>
