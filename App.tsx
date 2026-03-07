@@ -1,141 +1,270 @@
-import React, { useState } from 'react';
-import { Mic2, Library, ListTodo } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ListTodo, Library, BookOpen, Settings as SettingsIcon } from 'lucide-react';
 import CategoryView from './components/CategoryView';
 import DailyDozenList from './components/DailyDozenList';
 import ExerciseCard from './components/ExerciseCard';
-import CoachChat from './components/CoachChat';
-import { Exercise } from './types';
+import PiecesList from './components/PiecesList';
+import PiecePlayer from './components/PiecePlayer';
+import Settings from './components/Settings';
+import PracticeTimer from './components/PracticeTimer';
+import { Exercise, Piece } from './types';
+import { initAudio } from './utils/audio';
 
-type View = 'curriculum' | 'daily-dozen' | 'exercise' | 'coach';
+type View = 'daily-dozen' | 'curriculum' | 'pieces' | 'exercise' | 'piece-player' | 'settings';
 
 function App() {
-  const [currentView, setCurrentView] = useState<View>('daily-dozen'); // Default to daily dozen for impact
+  const [currentView, setCurrentView] = useState<View>(() => {
+    return (localStorage.getItem('chopins-touch-view') as View) || 'daily-dozen';
+  });
+  const [previousView, setPreviousView] = useState<View>('daily-dozen');
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
-  const [completedExercises, setCompletedExercises] = useState<string[]>([]);
+  const [selectedPiece, setSelectedPiece] = useState<Piece | null>(null);
+  const [completedExercises, setCompletedExercises] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('chopins-touch-completed') || '[]');
+    } catch { return []; }
+  });
+  const [completedPieces, setCompletedPieces] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('chopins-touch-pieces') || '[]');
+    } catch { return []; }
+  });
+  const audioInitRef = useRef(false);
+
+  // Unlock iOS AudioContext on first user interaction
+  useEffect(() => {
+    const unlock = () => {
+      if (!audioInitRef.current) {
+        initAudio();
+        audioInitRef.current = true;
+        document.removeEventListener('touchstart', unlock);
+        document.removeEventListener('click', unlock);
+      }
+    };
+    document.addEventListener('touchstart', unlock, { once: true });
+    document.addEventListener('click', unlock, { once: true });
+    return () => {
+      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('click', unlock);
+    };
+  }, []);
+
+  // Save completed exercises to localStorage
+  useEffect(() => {
+    try { localStorage.setItem('chopins-touch-completed', JSON.stringify(completedExercises)); } catch { /* QuotaExceededError */ }
+  }, [completedExercises]);
+
+  // Save completed pieces to localStorage
+  useEffect(() => {
+    try { localStorage.setItem('chopins-touch-pieces', JSON.stringify(completedPieces)); } catch { /* QuotaExceededError */ }
+  }, [completedPieces]);
+
+  // Save current view (but not exercise/piece-player — those need context)
+  useEffect(() => {
+    if (!['exercise', 'piece-player'].includes(currentView)) {
+      try { localStorage.setItem('chopins-touch-view', currentView); } catch { /* QuotaExceededError */ }
+    }
+  }, [currentView]);
 
   const handleSelectExercise = (ex: Exercise) => {
+    setPreviousView(currentView);
     setSelectedExercise(ex);
     setCurrentView('exercise');
   };
 
-  const handleCompleteExercise = (id: string) => {
-    if (!completedExercises.includes(id)) {
-      setCompletedExercises([...completedExercises, id]);
-    }
-    // Return to the previous list view context
-    // If selectedExercise was part of daily dozen, go back to daily dozen?
-    // For simplicity, we can default back to what makes sense or last view.
-    // Let's check where we came from roughly or just default to Daily Dozen if likely.
-    setCurrentView('daily-dozen'); 
+  const handleSelectPiece = (piece: Piece) => {
+    setPreviousView(currentView);
+    setSelectedPiece(piece);
+    setCurrentView('piece-player');
   };
 
-  const NavButton = ({ view, icon: Icon, label }: { view: View; icon: any; label: string }) => (
-     <button 
+  const handleBack = () => {
+    setCurrentView(previousView);
+  };
+
+  const handleCompleteExercise = (id: string) => {
+    if (!completedExercises.includes(id)) {
+      setCompletedExercises(prev => [...prev, id]);
+    }
+    setCurrentView(previousView);
+  };
+
+  const handleCompletePiece = (id: string) => {
+    if (!completedPieces.includes(id)) {
+      setCompletedPieces(prev => [...prev, id]);
+    }
+    setCurrentView('pieces');
+  };
+
+  const handleResetProgress = () => {
+    setCompletedExercises([]);
+    setCompletedPieces([]);
+    localStorage.removeItem('chopins-touch-completed');
+    localStorage.removeItem('chopins-touch-pieces');
+  };
+
+  const viewTitle = () => {
+    switch (currentView) {
+      case 'daily-dozen': return 'Daily Dozen';
+      case 'curriculum': return 'Curriculum';
+      case 'pieces': return 'Learn';
+      case 'exercise': return selectedExercise?.title || 'Exercise';
+      case 'piece-player': return selectedPiece?.title || 'Piece';
+      case 'settings': return 'Settings';
+    }
+  };
+
+  const TabButton = ({ view, icon: Icon, label }: { view: View; icon: React.ComponentType<{ size?: number; strokeWidth?: number }>; label: string }) => (
+    <button
       onClick={() => setCurrentView(view)}
-      className={`p-2 rounded-full transition-all group relative ${currentView === view ? 'bg-stone-800 text-amber-500' : 'text-stone-500 hover:text-stone-300'}`}
-      title={label}
+      className={`
+        flex flex-col items-center justify-center gap-1 py-2 px-5 min-w-[80px] min-h-[48px] rounded-xl transition-colors
+        ${currentView === view
+          ? 'text-amber-500'
+          : 'text-stone-500 active:text-stone-300'}
+      `}
     >
-      <Icon size={20} />
-      {currentView === view && (
-        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-amber-500 rounded-full"></span>
-      )}
+      <Icon size={22} strokeWidth={currentView === view ? 2.5 : 1.5} />
+      <span className={`text-[11px] tracking-wide ${currentView === view ? 'font-semibold' : 'font-normal'}`}>
+        {label}
+      </span>
     </button>
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-950 text-stone-100 font-sans">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-stone-950/80 backdrop-blur-md border-b border-stone-800">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setCurrentView('daily-dozen')}>
-            <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center transform rotate-3 shadow-lg shadow-amber-900/20">
-              <span className="font-serif font-bold text-lg text-white italic">C</span>
-            </div>
-            <h1 className="font-serif text-xl font-medium tracking-tight">Chopin's Touch</h1>
+    <div className="h-dvh flex flex-col bg-stone-950 text-stone-100 font-sans">
+      {/* Top Bar */}
+      <header className="shrink-0 bg-stone-950/90 backdrop-blur-md border-b border-stone-800/50 z-50">
+        <div className="px-4 h-11 flex items-center gap-3">
+          {/* Logo */}
+          <div
+            className="w-7 h-7 bg-amber-600 rounded-lg flex items-center justify-center transform rotate-3 shadow-lg shadow-amber-900/20 cursor-pointer active:scale-95"
+            onClick={() => setCurrentView('daily-dozen')}
+          >
+            <span className="font-serif font-bold text-sm text-white italic">C</span>
           </div>
-          <nav className="flex gap-2 bg-stone-900 p-1.5 rounded-full border border-stone-800 shadow-xl">
-             <NavButton view="daily-dozen" icon={ListTodo} label="Daily Dozen" />
-             <NavButton view="curriculum" icon={Library} label="Full Curriculum" />
-             <NavButton view="coach" icon={Mic2} label="AI Coach" />
-          </nav>
+          <span className="text-sm text-stone-400 font-medium tracking-tight">{viewTitle()}</span>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Practice Timer */}
+          <PracticeTimer isActive={currentView === 'exercise' || currentView === 'piece-player'} />
+
+          {/* Back button (when in exercise or piece-player) */}
+          {(currentView === 'exercise' || currentView === 'piece-player') && (
+            <button
+              onClick={handleBack}
+              className="text-stone-500 active:text-amber-500 text-sm flex items-center gap-1 transition-colors min-h-[44px] min-w-[44px] justify-center"
+            >
+              <span className="text-lg">&#8592;</span> Back
+            </button>
+          )}
+
+          {/* Settings gear (when NOT in exercise/piece/settings) */}
+          {!['exercise', 'piece-player', 'settings'].includes(currentView) && (
+            <button
+              onClick={() => setCurrentView('settings')}
+              className="text-stone-500 active:text-amber-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            >
+              <SettingsIcon size={18} />
+            </button>
+          )}
+
+          {/* Back from settings */}
+          {currentView === 'settings' && (
+            <button
+              onClick={() => setCurrentView(previousView)}
+              className="text-stone-500 active:text-amber-500 text-sm flex items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
+            >
+              <span className="text-lg">&#8592;</span> Back
+            </button>
+          )}
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
-        
-        {currentView === 'daily-dozen' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="mb-8">
-               <h1 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600 mb-2">
-                 Daily Dozen
-               </h1>
-               <p className="text-stone-400">
-                 A sequential routine to build your foundation every single day.
-               </p>
-             </div>
-             <DailyDozenList 
-                onSelectExercise={handleSelectExercise} 
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="max-w-5xl mx-auto w-full px-4 py-4">
+
+          {currentView === 'daily-dozen' && (
+            <div className="animate-fade-in">
+              <div className="mb-5">
+                <h1 className="text-2xl md:text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600 mb-1">
+                  Daily Dozen
+                </h1>
+                <p className="text-stone-400 text-sm">
+                  A sequential routine to build your foundation every single day.
+                </p>
+              </div>
+              <DailyDozenList
+                onSelectExercise={handleSelectExercise}
                 completedIds={completedExercises}
-             />
-          </div>
-        )}
-
-        {currentView === 'curriculum' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="mb-10 text-center">
-               <h1 className="text-3xl font-serif text-stone-100 mb-3">
-                 The Full Curriculum
-               </h1>
-               <p className="text-stone-500">
-                 Explore exercises by category to target specific needs.
-               </p>
+              />
             </div>
-            <CategoryView 
-              onSelectExercise={handleSelectExercise} 
-              completedIds={completedExercises}
-            />
-          </div>
-        )}
+          )}
 
-        {currentView === 'exercise' && selectedExercise && (
-          <div className="animate-in zoom-in-95 duration-300">
-            <div className="mb-4">
-              <button 
-                onClick={() => setCurrentView('daily-dozen')}
-                className="text-stone-500 hover:text-amber-500 text-sm flex items-center gap-1 mb-4 transition-colors group"
-              >
-                <span className="group-hover:-translate-x-1 transition-transform">←</span> Back to Routine
-              </button>
+          {currentView === 'curriculum' && (
+            <div className="animate-fade-in">
+              <div className="mb-6 text-center">
+                <h1 className="text-2xl md:text-3xl font-serif text-stone-100 mb-2">
+                  The Full Curriculum
+                </h1>
+                <p className="text-stone-500 text-sm">
+                  Explore exercises by category to target specific needs.
+                </p>
+              </div>
+              <CategoryView
+                onSelectExercise={handleSelectExercise}
+                completedIds={completedExercises}
+              />
             </div>
-            <ExerciseCard exercise={selectedExercise} />
-            <div className="mt-8 flex justify-center">
-              <button 
-                onClick={() => handleCompleteExercise(selectedExercise.id)}
-                className="px-8 py-3 bg-amber-700 hover:bg-amber-600 text-white font-medium rounded-full shadow-lg shadow-amber-900/20 transition-all hover:scale-105 active:scale-95"
-              >
-                Mark Complete
-              </button>
+          )}
+
+          {currentView === 'pieces' && (
+            <div className="animate-fade-in">
+              <PiecesList
+                onSelectPiece={handleSelectPiece}
+                completedPieceIds={completedPieces}
+              />
             </div>
-          </div>
-        )}
+          )}
 
-        {currentView === 'coach' && (
-           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto">
-             <div className="mb-6 text-center">
-               <h2 className="text-2xl font-serif text-stone-200">The Master Class</h2>
-               <p className="text-stone-500 text-sm">Ask about technique, repertoire, or physiology.</p>
-             </div>
-             <CoachChat />
-           </div>
-        )}
+          {currentView === 'exercise' && selectedExercise && (
+            <div className="animate-fade-in">
+              <ExerciseCard
+                exercise={selectedExercise}
+                onComplete={() => handleCompleteExercise(selectedExercise.id)}
+              />
+            </div>
+          )}
 
+          {currentView === 'piece-player' && selectedPiece && (
+            <div className="animate-fade-in">
+              <PiecePlayer
+                piece={selectedPiece}
+                onComplete={() => handleCompletePiece(selectedPiece.id)}
+              />
+            </div>
+          )}
+
+          {currentView === 'settings' && (
+            <div className="animate-fade-in">
+              <Settings onResetProgress={handleResetProgress} />
+            </div>
+          )}
+
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="py-6 text-center text-stone-600 text-xs border-t border-stone-900 mt-auto">
-        <p>Inspired by the teaching methods of Frédéric Chopin.</p>
-      </footer>
+      {/* Bottom Tab Bar */}
+      <nav className="shrink-0 bg-stone-950/90 backdrop-blur-xl border-t border-stone-800/50 z-50">
+        <div className="flex items-center justify-around max-w-lg mx-auto px-2 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
+          <TabButton view="daily-dozen" icon={ListTodo} label="Daily Dozen" />
+          <TabButton view="curriculum" icon={Library} label="Curriculum" />
+          <TabButton view="pieces" icon={BookOpen} label="Learn" />
+        </div>
+      </nav>
     </div>
   );
 }

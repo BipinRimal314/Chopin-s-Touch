@@ -16,6 +16,7 @@ export enum ExerciseType {
 
 export enum ExerciseCategory {
   Technical = 'Technical Skills',
+  HandCoordination = 'Hand Coordination',
   Musicality = 'Musicality & Expression',
   Habits = 'Practice Habits',
   Theory = 'Music Theory & Ear Training',
@@ -34,6 +35,9 @@ export interface KeyFinger {
   hand: 'left' | 'right';
 }
 
+// Hand indicator
+export type Hand = 'left' | 'right' | 'both';
+
 export interface Exercise {
   id: string;
   title: string;
@@ -42,15 +46,38 @@ export interface Exercise {
   category: ExerciseCategory;
   difficulty: Difficulty;
   key: string;
+  hand?: Hand; // defaults to 'right' if not specified
   notes: string[]; // List of notes for visualizer, e.g., ["B3", "C#4", "D#4"...]
   fingerings: KeyFinger[]; // Visual cues
   tips: string[]; // Chopin method specific tips
 }
 
-export interface ChatMessage {
-  role: 'user' | 'model';
-  text: string;
-  timestamp: number;
+// Piece system
+export interface PieceSection {
+  name: string;          // e.g., "Measures 1-4", "A Section"
+  notes: string[];       // Note IDs like "C4", "E4"
+  fingerings: KeyFinger[];
+  hand: Hand;
+}
+
+export interface Piece {
+  id: string;
+  title: string;
+  composer: string;
+  difficulty: Difficulty;
+  level: 1 | 2 | 3 | 4;   // Progressive difficulty
+  key: string;
+  tempo: number;            // Suggested BPM
+  description: string;
+  sections: PieceSection[];
+  tips: string[];
+}
+
+// Practice stats
+export interface DailyStats {
+  date: string;             // ISO date string YYYY-MM-DD
+  minutesPracticed: number;
+  exercisesCompleted: string[];
 }
 
 export interface PracticeSession {

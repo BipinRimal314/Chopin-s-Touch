@@ -1,43 +1,62 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Exercise } from '../types';
+import { Exercise, ExerciseType } from '../types';
 import PianoVisualizer from './PianoVisualizer';
-import { Music, PlayCircle, Info, Volume2, Mic, MicOff, Check, RefreshCw } from 'lucide-react';
-import { playSequence } from '../utils/audio';
-import { startPitchDetection } from '../utils/pitchDetection';
+import { Music, Volume2, Mic, MicOff, Check, RefreshCw, Info, Brain, BookOpen, Timer, Loader2 } from 'lucide-react';
+import { playSequence, stopSequence, ensureAudioReady } from '../utils/audio';
+import { startPitchDetection, normalizeNoteName } from '../utils/pitchDetection';
+import { startMetronome, stopMetronome, setMetronomeBPM } from '../utils/metronome';
 
 interface ExerciseCardProps {
   exercise: Exercise;
+  onComplete?: () => void;
 }
 
-const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise }) => {
+const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => {
   const [isPlayingDemo, setIsPlayingDemo] = useState(false);
   const [isPracticeMode, setIsPracticeMode] = useState(false);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
   const [detectedNote, setDetectedNote] = useState<string | null>(null);
   const [successNote, setSuccessNote] = useState<string | null>(null);
-  
+  const [tempo, setTempo] = useState(100);
+  const [metronomeOn, setMetronomeOn] = useState(false);
+  const [micError, setMicError] = useState<string | null>(null);
+  const [isMicLoading, setIsMicLoading] = useState(false);
+
   const stopListeningRef = useRef<(() => void) | null>(null);
   const debounceRef = useRef<number | null>(null);
+
+  const hasNotes = exercise.notes.length > 0;
 
   // Clean up on unmount
   useEffect(() => {
     return () => {
       if (stopListeningRef.current) stopListeningRef.current();
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
+      stopMetronome();
     };
   }, []);
 
+  // Update metronome BPM when tempo changes
+  useEffect(() => {
+    if (metronomeOn) setMetronomeBPM(tempo);
+  }, [tempo, metronomeOn]);
+
   const handlePlayDemo = async () => {
-    if (isPlayingDemo) return;
-    if (isPracticeMode) handleTogglePractice(); // Stop practice if demo starts
+    // MUST be first — iOS WKWebView requires resume() in the synchronous tap stack
+    ensureAudioReady();
+    if (isPlayingDemo) {
+      stopSequence();
+      setIsPlayingDemo(false);
+      return;
+    }
+    if (isPracticeMode) handleTogglePractice();
     setIsPlayingDemo(true);
-    await playSequence(exercise.notes, 500);
+    await playSequence(exercise.notes, tempo);
     setIsPlayingDemo(false);
   };
 
   const handleTogglePractice = async () => {
     if (isPracticeMode) {
-      // Stop logic
       setIsPracticeMode(false);
       setDetectedNote(null);
       setSuccessNote(null);
@@ -47,19 +66,24 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise }) => {
         stopListeningRef.current = null;
       }
     } else {
-      // Start logic
       setIsPracticeMode(true);
       setCurrentNoteIndex(0);
       setSuccessNote(null);
-      
+      setIsMicLoading(true);
+
       try {
+        setMicError(null);
         const stopFn = await startPitchDetection((note) => {
            setDetectedNote(note);
         });
         stopListeningRef.current = stopFn;
-      } catch (e) {
-        console.error("Failed to start pitch detection", e);
+      } catch (e: any) {
+        const msg = e?.message || 'Microphone access failed';
+        console.error("Failed to start pitch detection:", msg);
+        setMicError(msg);
         setIsPracticeMode(false);
+      } finally {
+        setIsMicLoading(false);
       }
     }
   };
@@ -70,168 +94,271 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise }) => {
      setDetectedNote(null);
   };
 
+  const toggleMetronome = () => {
+    if (metronomeOn) {
+      stopMetronome();
+      setMetronomeOn(false);
+    } else {
+      startMetronome(tempo);
+      setMetronomeOn(true);
+    }
+  };
+
   // Logic to check if played note matches target
   useEffect(() => {
     if (!isPracticeMode) return;
-    
-    const targetNote = exercise.notes[currentNoteIndex];
-    if (!targetNote) return; // End of exercise
 
-    // Simple check: does detected note equal target?
-    // We can be lenient with octaves if needed, but for now exact match
-    if (detectedNote === targetNote) {
-       // Debounce to prevent rapid firing or noise errors
+    const targetNote = exercise.notes[currentNoteIndex];
+    if (!targetNote || !detectedNote) return;
+
+    const normalizedTarget = normalizeNoteName(targetNote);
+    const normalizedDetected = normalizeNoteName(detectedNote);
+
+    if (normalizedDetected === normalizedTarget) {
        if (debounceRef.current === null) {
           setSuccessNote(targetNote);
-          // Advance to next note after short delay
           debounceRef.current = window.setTimeout(() => {
              setCurrentNoteIndex(prev => prev + 1);
              setSuccessNote(null);
              debounceRef.current = null;
-          }, 400); // 400ms delay to show green success state
+          }, 400);
        }
     }
   }, [detectedNote, currentNoteIndex, exercise.notes, isPracticeMode]);
 
   const isComplete = isPracticeMode && currentNoteIndex >= exercise.notes.length;
 
+  // Hand indicator label
+  const handLabel = exercise.hand === 'left' ? 'LH' : exercise.hand === 'both' ? 'Both' : 'RH';
+
+  // Icon for no-note exercises
+  const NoNoteIcon = exercise.type === ExerciseType.Mental ? Brain : BookOpen;
+
   return (
-    <div className="bg-stone-900 rounded-2xl p-6 shadow-xl border border-stone-800 max-w-4xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start mb-6">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-             <span className="px-3 py-1 bg-stone-800 text-stone-400 text-xs font-bold uppercase tracking-wider rounded-full border border-stone-700">
+    <div className="bg-stone-900 rounded-2xl shadow-xl border border-stone-800 max-w-5xl mx-auto overflow-hidden">
+
+      {/* Landscape split: info left, piano right */}
+      <div className="flex flex-col md:flex-row">
+
+        {/* Left Column - Exercise Info (40%, or full width for no-note exercises) */}
+        <div className={`${hasNotes ? 'md:w-[40%]' : 'w-full'} p-5 md:p-6 ${hasNotes ? 'md:border-r border-stone-800' : ''} flex flex-col`}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <span className="px-3 py-1 bg-stone-800 text-stone-400 text-xs font-bold uppercase tracking-wider rounded-full border border-stone-700">
               {exercise.category}
             </span>
             <span className="px-3 py-1 bg-amber-900/30 text-amber-500 text-xs font-bold uppercase tracking-wider rounded-full border border-amber-900/50">
               {exercise.type}
             </span>
           </div>
-          <h2 className="text-3xl font-serif text-stone-100 mb-2">{exercise.title}</h2>
-          <p className="text-stone-400 text-sm max-w-xl leading-relaxed">
+
+          <h2 className="text-2xl md:text-3xl font-serif text-stone-100 mb-2">{exercise.title}</h2>
+
+          <p className="text-stone-400 text-sm leading-relaxed mb-4">
             {exercise.description}
           </p>
-        </div>
-        <div className="mt-4 md:mt-0 p-4 bg-stone-950 rounded-lg border border-stone-800">
-           <div className="text-center">
-             <span className="block text-2xl font-bold text-amber-500">{exercise.key}</span>
-             <span className="text-xs text-stone-500 uppercase tracking-widest">Key Signature</span>
-           </div>
-        </div>
-      </div>
 
-      {/* Visualizer Section */}
-      <div className="mb-8 bg-stone-950/50 p-4 rounded-xl border border-stone-800/50 overflow-hidden relative">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 text-stone-500 text-sm">
-             <Music size={16} />
-             <span>{isPracticeMode ? 'Listening to your piano...' : 'Interactive Visualizer'}</span>
-          </div>
-          <button 
-            onClick={handlePlayDemo}
-            disabled={isPlayingDemo || isPracticeMode}
-            className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all
-              ${isPlayingDemo 
-                ? 'bg-amber-900/50 text-amber-500 cursor-wait' 
-                : 'bg-stone-800 hover:bg-amber-900 text-stone-300 hover:text-white disabled:opacity-30'}`}
-          >
-            <Volume2 size={14} />
-            {isPlayingDemo ? 'Playing...' : 'Hear Demo'}
-          </button>
-        </div>
-        
-        {/* Progress Bar for Practice Mode */}
-        {isPracticeMode && (
-          <div className="absolute top-0 left-0 w-full h-1 bg-stone-800 z-20">
-            <div 
-              className="h-full bg-amber-500 transition-all duration-300"
-              style={{ width: `${(currentNoteIndex / exercise.notes.length) * 100}%` }}
-            />
-          </div>
-        )}
-
-        {isComplete ? (
-          <div className="h-48 flex flex-col items-center justify-center bg-stone-900/80 rounded-lg animate-in fade-in">
-             <div className="w-16 h-16 bg-green-900/30 rounded-full flex items-center justify-center mb-4 border border-green-500/30">
-               <Check size={32} className="text-green-500" />
-             </div>
-             <h3 className="text-xl font-serif text-stone-100">Exercise Complete!</h3>
-             <button onClick={handleResetPractice} className="mt-4 flex items-center gap-2 text-stone-400 hover:text-amber-500">
-               <RefreshCw size={14} /> Practice Again
-             </button>
-          </div>
-        ) : (
-          <PianoVisualizer 
-            highlightedNotes={isPracticeMode ? [] : exercise.notes} // Clear general highlights in practice mode to focus on active note
-            activeNote={isPracticeMode ? exercise.notes[currentNoteIndex] : null}
-            successNote={successNote}
-            fingerings={exercise.fingerings}
-            startOctave={3}
-            octaveCount={2}
-            interactive={!isPracticeMode}
-          />
-        )}
-        
-        <div className="mt-4 flex justify-between items-center text-sm text-stone-400">
-          <div className="flex gap-6">
-            <div className="flex items-center gap-2">
-              <span className={`w-3 h-3 rounded-full ${isPracticeMode ? 'bg-amber-600 animate-pulse' : 'bg-amber-600'}`}></span>
-              <span>{isPracticeMode ? 'Target Note' : 'Active Key'}</span>
+          {/* Key Signature + Hand Badge */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="inline-flex items-center gap-2 p-3 bg-stone-950 rounded-lg border border-stone-800">
+              <span className="text-xl font-bold text-amber-500">{exercise.key}</span>
+              <span className="text-xs text-stone-500 uppercase tracking-widest">Key</span>
             </div>
-            {isPracticeMode && (
-               <div className="flex items-center gap-2">
-                 <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                 <span>Success</span>
-               </div>
+            {exercise.hand && (
+              <div className="inline-flex items-center px-3 py-1.5 bg-stone-950 rounded-lg border border-stone-800">
+                <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">{handLabel}</span>
+              </div>
             )}
           </div>
-          {isPracticeMode && (
-             <div className="font-mono text-xs text-stone-600">
-                Detected: {detectedNote || '...'}
-             </div>
+
+          {/* No-note exercises: large icon + tips as main content */}
+          {!hasNotes && (
+            <div className="flex flex-col items-center text-center py-8 mb-6">
+              <div className="w-20 h-20 bg-stone-800 rounded-full flex items-center justify-center mb-6 border border-stone-700">
+                <NoNoteIcon size={40} className="text-amber-500" />
+              </div>
+              <h3 className="text-lg font-serif text-stone-200 mb-4">Focus Exercise</h3>
+              <div className="max-w-md space-y-3">
+                {exercise.tips.map((tip, idx) => (
+                  <p key={idx} className="text-stone-300 text-base leading-relaxed">
+                    <span className="text-amber-500 font-serif font-bold italic mr-2">{idx + 1}.</span>
+                    {tip}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tips (only shown in sidebar when has notes) */}
+          {hasNotes && (
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-stone-300 mb-2 flex items-center gap-2">
+                <Info size={16} className="text-amber-500" />
+                Chopin's Touch Points
+              </h3>
+              <ul className="space-y-2">
+                {exercise.tips.map((tip, idx) => (
+                  <li key={idx} className="flex gap-2 text-stone-400 text-sm leading-relaxed">
+                    <span className="text-amber-500 font-serif font-bold italic shrink-0">{idx + 1}.</span>
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Mark Complete for no-note exercises */}
+          {!hasNotes && onComplete && (
+            <button
+              onClick={onComplete}
+              className="w-full py-3.5 bg-amber-700 text-white font-semibold rounded-xl shadow-lg shadow-amber-900/20 transition-transform active:scale-95 min-h-[48px] text-base mt-4"
+            >
+              Mark Complete
+            </button>
           )}
         </div>
-      </div>
 
-      {/* Control Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-stone-800/30 p-5 rounded-xl border border-stone-800">
-          <h3 className="text-lg font-semibold text-stone-200 mb-3 flex items-center gap-2">
-            <Info size={18} className="text-amber-500" />
-            Chopin's Touch Points
-          </h3>
-          <ul className="space-y-3">
-            {exercise.tips.map((tip, idx) => (
-              <li key={idx} className="flex gap-3 text-stone-300 text-sm leading-relaxed">
-                <span className="text-amber-500 font-serif font-bold italic">{idx + 1}.</span>
-                {tip}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {/* Right Column - Piano & Controls (60%) — only for exercises with notes */}
+        {hasNotes && (
+          <div className="md:w-[60%] flex flex-col">
 
-        <div 
-          onClick={handleTogglePractice}
-          className={`
-            flex flex-col justify-center items-center p-6 rounded-xl border text-center cursor-pointer transition-all
-            ${isPracticeMode 
-              ? 'bg-amber-900/20 border-amber-700/50 shadow-[0_0_30px_rgba(245,158,11,0.1)]' 
-              : 'bg-gradient-to-br from-stone-800 to-stone-900 border-stone-700 hover:border-amber-700/50'}
-          `}
-        >
-          <div className={`
-             mb-3 p-4 rounded-full transition-all
-             ${isPracticeMode ? 'bg-amber-600 text-white shadow-lg scale-110' : 'text-amber-500 opacity-80 hover:opacity-100 hover:bg-stone-800'}
-          `}>
-             {isPracticeMode ? <MicOff size={32} /> : <Mic size={32} />}
+            {/* Piano Visualizer Section */}
+            <div className="flex-1 bg-stone-950/50 p-4 relative">
+              {/* Visualizer header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-stone-500 text-sm">
+                  <Music size={16} />
+                  <span>{isMicLoading ? 'Initializing mic...' : isPracticeMode ? 'Listening...' : 'Interactive Visualizer'}</span>
+                </div>
+                {isPracticeMode && (
+                  <div className="font-mono text-xs text-stone-600">
+                    Detected: {detectedNote || '...'}
+                  </div>
+                )}
+              </div>
+
+              {/* Progress Bar for Practice Mode */}
+              {isPracticeMode && (
+                <div className="absolute top-0 left-0 w-full h-2 bg-stone-800 z-20">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all duration-300"
+                    style={{ width: `${(currentNoteIndex / exercise.notes.length) * 100}%` }}
+                  />
+                </div>
+              )}
+
+              {isComplete ? (
+                <div className="h-[200px] flex flex-col items-center justify-center bg-stone-900/80 rounded-lg animate-in fade-in">
+                  <div className="w-16 h-16 bg-green-900/30 rounded-full flex items-center justify-center mb-4 border border-green-500/30">
+                    <Check size={32} className="text-green-500" />
+                  </div>
+                  <h3 className="text-xl font-serif text-stone-100">Exercise Complete!</h3>
+                  <button
+                    onClick={handleResetPractice}
+                    className="mt-4 flex items-center gap-2 text-stone-400 active:text-amber-500 min-h-[44px] min-w-[44px] justify-center"
+                  >
+                    <RefreshCw size={14} /> Practice Again
+                  </button>
+                </div>
+              ) : (
+                <PianoVisualizer
+                  highlightedNotes={isPracticeMode ? [] : exercise.notes}
+                  activeNote={isPracticeMode ? exercise.notes[currentNoteIndex] : null}
+                  successNote={successNote}
+                  fingerings={exercise.fingerings}
+                  startOctave={3}
+                  octaveCount={2}
+                  interactive={!isPracticeMode}
+                />
+              )}
+
+              {/* Mic Error */}
+              {micError && (
+                <div className="mt-3 p-3 bg-red-900/30 border border-red-800/50 rounded-lg text-red-400 text-sm">
+                  {micError}
+                </div>
+              )}
+
+              {/* Legend */}
+              <div className="mt-3 flex gap-4 text-sm text-stone-500">
+                <div className="flex items-center gap-2">
+                  <span className={`w-3 h-3 rounded-full ${isPracticeMode ? 'bg-amber-600 animate-pulse' : 'bg-amber-600'}`}></span>
+                  <span>{isPracticeMode ? 'Target' : 'Active'}</span>
+                </div>
+                {isPracticeMode && (
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                    <span>Success</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Tempo Slider + Metronome */}
+            <div className="px-4 py-2 border-t border-stone-800/50 flex items-center gap-3">
+              <button
+                onClick={toggleMetronome}
+                className={`p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center
+                  ${metronomeOn ? 'bg-amber-700 text-white' : 'bg-stone-800 text-stone-400 active:bg-stone-700'}`}
+                title="Metronome"
+              >
+                <Timer size={16} />
+              </button>
+              <span className="text-xs text-stone-500 w-8 text-right">{tempo}</span>
+              <input
+                type="range"
+                min={40}
+                max={180}
+                value={tempo}
+                onChange={(e) => setTempo(Number(e.target.value))}
+                className="flex-1 accent-amber-500 h-2"
+              />
+              <span className="text-xs text-stone-500">BPM</span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="p-4 border-t border-stone-800 space-y-3">
+              {/* Demo + Practice buttons row */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handlePlayDemo}
+                  disabled={isPracticeMode}
+                  className={`
+                    flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold transition-colors min-h-[48px]
+                    ${isPlayingDemo
+                      ? 'bg-amber-700 text-white active:bg-amber-800'
+                      : 'bg-stone-800 text-stone-200 active:bg-stone-700 disabled:opacity-30'}
+                  `}
+                >
+                  <Volume2 size={18} />
+                  {isPlayingDemo ? 'Stop' : 'Hear Demo'}
+                </button>
+
+                <button
+                  onClick={handleTogglePractice}
+                  className={`
+                    flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold transition-colors min-h-[48px]
+                    ${isPracticeMode
+                      ? 'bg-amber-700 text-white active:bg-amber-800 shadow-lg shadow-amber-900/30'
+                      : 'bg-amber-900/40 text-amber-400 border border-amber-800/50 active:bg-amber-900/60'}
+                  `}
+                >
+                  {isMicLoading ? <Loader2 size={18} className="animate-spin" /> : isPracticeMode ? <MicOff size={18} /> : <Mic size={18} />}
+                  {isMicLoading ? 'Starting...' : isPracticeMode ? 'Stop Practice' : 'Start Practice'}
+                </button>
+              </div>
+
+              {/* Mark Complete button */}
+              {onComplete && (
+                <button
+                  onClick={onComplete}
+                  className="w-full py-3.5 bg-amber-700 text-white font-semibold rounded-xl shadow-lg shadow-amber-900/20 transition-transform active:scale-95 min-h-[48px] text-base"
+                >
+                  Mark Complete
+                </button>
+              )}
+            </div>
           </div>
-          <h4 className={`font-medium ${isPracticeMode ? 'text-amber-500' : 'text-stone-200'}`}>
-            {isPracticeMode ? 'Stop Practice Mode' : 'Start Practice Mode'}
-          </h4>
-          <p className="text-xs text-stone-500 mt-1">
-            {isPracticeMode ? 'Listening for notes...' : 'Uses your microphone to track progress.'}
-          </p>
-        </div>
+        )}
       </div>
     </div>
   );
