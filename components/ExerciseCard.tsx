@@ -6,6 +6,7 @@ import { playSequence, stopSequence, ensureAudioReady } from '../utils/audio';
 import { startPitchDetection, normalizeNoteName } from '../utils/pitchDetection';
 import { startMetronome, stopMetronome, setMetronomeBPM } from '../utils/metronome';
 import { markExercisePracticed, saveBestAccuracy, unlockAchievement } from '../utils/storage';
+import { successHaptic } from '../utils/haptics';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -130,6 +131,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
     if (normalizedDetected === normalizedTarget) {
        if (debounceRef.current === null) {
           setSuccessNote(targetNote);
+          successHaptic();
           debounceRef.current = window.setTimeout(() => {
              setCurrentNoteIndex(prev => prev + 1);
              setSuccessNote(null);

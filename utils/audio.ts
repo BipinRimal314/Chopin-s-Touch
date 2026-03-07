@@ -15,6 +15,15 @@ const activeNotes = new Map<string, {
 }>();
 
 /**
+ * Get (or create) the shared AudioContext. Used by metronome to avoid
+ * creating a separate context (iOS allows max ~4).
+ */
+export const getAudioContext = (): AudioContext => {
+  createContext();
+  return audioContext!;
+};
+
+/**
  * Create the AudioContext and master gain node if they don't exist.
  */
 const createContext = (): void => {

@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { NoteConfig } from '../types';
 import { PIANO_KEYS_OCTAVE } from '../constants';
 import { playNote, stopNote, ensureAudioReady } from '../utils/audio';
+import { tapHaptic } from '../utils/haptics';
 
 interface PianoVisualizerProps {
   highlightedNotes?: string[]; // General highlights (e.g. scale members)
@@ -59,6 +60,7 @@ const PianoVisualizer: React.FC<PianoVisualizerProps> = ({
     if (interactive) {
       ensureAudioReady();
       playNote(noteId);
+      tapHaptic();
     }
   }, [interactive]);
 
@@ -129,7 +131,7 @@ const PianoVisualizer: React.FC<PianoVisualizerProps> = ({
   return (
     <div className="relative w-full select-none touch-none">
       {/* Piano container */}
-      <div className="relative h-[200px] w-full bg-stone-900 rounded-t-lg shadow-2xl border-t-4 border-amber-900/50 overflow-hidden">
+      <div className="relative h-[200px] landscape:h-[40vh] w-full bg-stone-900 rounded-t-lg shadow-2xl border-t-4 border-amber-900/50 overflow-hidden">
 
         {/* White Keys */}
         <div className="flex h-full w-full">
@@ -140,6 +142,8 @@ const PianoVisualizer: React.FC<PianoVisualizerProps> = ({
             return (
               <div
                 key={key.id}
+                role="button"
+                aria-label={`Piano key ${key.id}`}
                 onMouseDown={() => handleNotePlay(key.id)}
                 onMouseUp={() => {}}
                 onTouchStart={(e) => handleTouchStart(e, key.id)}
@@ -178,6 +182,8 @@ const PianoVisualizer: React.FC<PianoVisualizerProps> = ({
           return (
             <div
               key={key.id}
+              role="button"
+              aria-label={`Piano key ${key.id}`}
               onMouseDown={(e) => {
                 e.stopPropagation();
                 handleNotePlay(key.id);

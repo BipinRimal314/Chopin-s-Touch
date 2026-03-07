@@ -145,6 +145,8 @@ function App() {
   const TabButton = ({ view, icon: Icon, label }: { view: View; icon: React.ComponentType<{ size?: number; strokeWidth?: number }>; label: string }) => (
     <button
       onClick={() => setCurrentView(view)}
+      aria-label={label}
+      aria-current={currentView === view ? 'page' : undefined}
       className={`
         flex flex-col items-center justify-center gap-1 py-2 px-4 min-w-[70px] min-h-[48px] rounded-xl transition-colors
         ${currentView === view
@@ -183,6 +185,7 @@ function App() {
           {(currentView === 'exercise' || currentView === 'piece-player') && (
             <button
               onClick={handleBack}
+              aria-label="Go back"
               className="text-stone-500 active:text-amber-500 text-sm flex items-center gap-1 transition-colors min-h-[44px] min-w-[44px] justify-center"
             >
               <span className="text-lg">&#8592;</span> Back
@@ -193,6 +196,7 @@ function App() {
           {!['exercise', 'piece-player', 'settings'].includes(currentView) && (
             <button
               onClick={() => setCurrentView('settings')}
+              aria-label="Settings"
               className="text-stone-500 active:text-amber-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
               <SettingsIcon size={18} />
@@ -203,6 +207,7 @@ function App() {
           {currentView === 'settings' && (
             <button
               onClick={() => setCurrentView(previousView)}
+              aria-label="Go back"
               className="text-stone-500 active:text-amber-500 text-sm flex items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
             >
               <span className="text-lg">&#8592;</span> Back
@@ -292,7 +297,7 @@ function App() {
       </main>
 
       {/* Bottom Tab Bar */}
-      <nav className="shrink-0 bg-stone-950/90 backdrop-blur-xl border-t border-stone-800/50 z-50">
+      <nav aria-label="Main navigation" className="shrink-0 bg-stone-950/90 backdrop-blur-xl border-t border-stone-800/50 z-50">
         <div className="flex items-center justify-around max-w-lg mx-auto px-2 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
           <TabButton view="daily-dozen" icon={ListTodo} label="Daily Dozen" />
           <TabButton view="curriculum" icon={Library} label="Curriculum" />

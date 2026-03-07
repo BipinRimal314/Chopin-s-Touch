@@ -413,6 +413,7 @@ export const PIECES: Piece[] = [
       'This piece is about dying — literally. Play with deep feeling.',
       'The repeated B notes are not monotonous. Each one should have slightly different weight.',
       'Rubato is essential. Let the melody breathe.',
+      'Pedal: change on each new harmony. The prelude needs sustained bass but not muddiness.',
       'Chopin said: "Simplicity is the final achievement."',
     ],
   },
@@ -465,6 +466,7 @@ export const PIECES: Piece[] = [
       'Play as quietly as you possibly can. This piece lives in pianissimo.',
       'Each descending group of four notes is one breath.',
       'Satie and Chopin shared a belief: the piano should sing, not shout.',
+      'Pedal: sustain through each phrase (about 4 notes), then lift and re-press. The sound should be hazy, not muddy.',
     ],
   },
 
@@ -514,6 +516,7 @@ export const PIECES: Piece[] = [
       'ONE-two-three waltz feel. The first beat is grounded, beats two and three float.',
       'The descending line should slow slightly (rubato), then the ascending line accelerates.',
       'The B section introduces G# — a chromatic color that deepens the sadness.',
+      'Pedal: press on beat 1, release on beat 3. The waltz needs space between phrases.',
       'This is Chopin\'s heartbeat made audible.',
     ],
   },
@@ -568,6 +571,7 @@ export const PIECES: Piece[] = [
       'Play the Bb-G-Bb opening as if you are saying "hello" to someone you love.',
       'Every note in Chopin has a specific dynamic. No two notes are the same volume.',
       'The ornaments (trills, turns) come later. First: master the naked melody.',
+      'Pedal: press the sustain pedal with each new harmony (every 2-3 notes), releasing and re-pressing as the bass changes. Never let harmonies bleed together.',
     ],
   },
 
@@ -618,6 +622,7 @@ export const PIECES: Piece[] = [
       'The waltz feel must be subtle. This is not a dance hall — it is a private room.',
       'The ascending C#-D#-E is the emotional peak. Shape it with a slight crescendo.',
       'Rubato: the melody sways like a pendulum, never metronomic.',
+      'Pedal: light pedal, changing on each beat of the waltz (beat 1). Lift briefly between harmonies to keep the texture clear.',
     ],
   },
 
@@ -666,6 +671,7 @@ export const PIECES: Piece[] = [
       'The repeated Ab notes are the "raindrops" — they must be steady and quiet.',
       'The melody notes (F, Bb, Gb) sing ABOVE the rain. Bring them out.',
       'Chopin wrote this while listening to actual rain. Listen to rain while you practice.',
+      'Pedal: hold the sustain pedal through each measure, creating a wash of sound. The repeated Ab notes blend into one continuous "raindrop" texture.',
     ],
   },
 ];

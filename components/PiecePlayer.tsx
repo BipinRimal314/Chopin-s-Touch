@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Piece } from '../types';
 import PianoVisualizer from './PianoVisualizer';
 import { Music, Volume2, Mic, MicOff, Check, RefreshCw, ChevronDown, Timer, Loader2 } from 'lucide-react';
-import { playSequence, stopSequence, stopNote, ensureAudioReady } from '../utils/audio';
+import { playSequence, stopSequence, ensureAudioReady } from '../utils/audio';
 import { startPitchDetection, normalizeNoteName } from '../utils/pitchDetection';
 import { startMetronome, stopMetronome, setMetronomeBPM } from '../utils/metronome';
 import { saveBestAccuracy } from '../utils/storage';
+import { successHaptic } from '../utils/haptics';
 
 interface PiecePlayerProps {
   piece: Piece;
@@ -128,6 +129,7 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
     if (normalizedDetected === normalizedTarget) {
       if (debounceRef.current === null) {
         setSuccessNote(targetNote);
+        successHaptic();
         debounceRef.current = window.setTimeout(() => {
           setCurrentNoteIndex(prev => prev + 1);
           setSuccessNote(null);

@@ -5,9 +5,12 @@
  * due to JS event loop delays), this uses a look-ahead scheduler:
  * a setInterval checks every 25ms and schedules audio events 100ms ahead
  * using the Web Audio clock, which is hardware-accurate.
+ *
+ * Shares the AudioContext from audio.ts to stay within iOS's ~4 context limit.
  */
 
-let audioContext: AudioContext | null = null;
+import { getAudioContext } from './audio';
+
 let nextNoteTime = 0;
 let timerID: ReturnType<typeof setInterval> | null = null;
 let isPlaying = false;
@@ -18,15 +21,8 @@ let currentBeat = 0;
 const SCHEDULE_AHEAD = 0.1; // seconds — how far ahead to schedule audio
 const LOOKAHEAD = 25; // ms — how often the scheduler checks
 
-function getOrCreateContext(): AudioContext {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  return audioContext;
-}
-
 function scheduleClick(time: number, beat: number) {
-  const ctx = getOrCreateContext();
+  const ctx = getAudioContext();
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
 
@@ -44,7 +40,7 @@ function scheduleClick(time: number, beat: number) {
 }
 
 function scheduler() {
-  const ctx = getOrCreateContext();
+  const ctx = getAudioContext();
   while (nextNoteTime < ctx.currentTime + SCHEDULE_AHEAD) {
     scheduleClick(nextNoteTime, currentBeat);
     if (beatCallback) beatCallback(currentBeat);
@@ -64,7 +60,7 @@ function scheduler() {
 export const startMetronome = (bpm: number, onBeat?: (beat: number) => void): void => {
   if (isPlaying) stopMetronome();
 
-  const ctx = getOrCreateContext();
+  const ctx = getAudioContext();
   if (ctx.state === 'suspended') ctx.resume();
 
   currentBPM = bpm;

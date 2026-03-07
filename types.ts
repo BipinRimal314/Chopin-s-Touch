@@ -72,16 +72,3 @@ export interface Piece {
   sections: PieceSection[];
   tips: string[];
 }
-
-// Practice stats
-export interface DailyStats {
-  date: string;             // ISO date string YYYY-MM-DD
-  minutesPracticed: number;
-  exercisesCompleted: string[];
-}
-
-export interface PracticeSession {
-  date: string;
-  durationMinutes: number;
-  focus: string;
-}
