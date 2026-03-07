@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Piece } from '../types';
 import PianoVisualizer from './PianoVisualizer';
 import FallingNotes from './FallingNotes';
-import { Music, Volume2, Mic, MicOff, Check, RefreshCw, ChevronDown, Timer, Loader2 } from 'lucide-react';
+import { Music, Volume2, Mic, MicOff, Check, RefreshCw, ChevronDown, Timer, Loader2, Piano } from 'lucide-react';
 import { playSequence, stopSequence, ensureAudioReady } from '../utils/audio';
 import { startPitchDetection, normalizeNoteName } from '../utils/pitchDetection';
 import { startMetronome, stopMetronome, setMetronomeBPM } from '../utils/metronome';
 import { saveBestAccuracy } from '../utils/storage';
 import { successHaptic } from '../utils/haptics';
+import { isMIDIAvailable, startMIDIInput } from '../utils/midi';
 
 interface PiecePlayerProps {
   piece: Piece;
@@ -27,6 +28,8 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
   const [micError, setMicError] = useState<string | null>(null);
   const [isMicLoading, setIsMicLoading] = useState(false);
   const [missCount, setMissCount] = useState(0);
+  const [inputMode, setInputMode] = useState<'mic' | 'midi'>('mic');
+  const [midiAvailable, setMidiAvailable] = useState(false);
 
   const stopListeningRef = useRef<(() => void) | null>(null);
   const debounceRef = useRef<number | null>(null);
@@ -50,6 +53,11 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
       if (missDebounceRef.current) window.clearTimeout(missDebounceRef.current);
       stopMetronome();
     };
+  }, []);
+
+  // Check MIDI availability
+  useEffect(() => {
+    isMIDIAvailable().then(setMidiAvailable);
   }, []);
 
   // Update metronome when tempo changes
@@ -88,11 +96,18 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
       setIsMicLoading(true);
       try {
         setMicError(null);
-        const stopFn = await startPitchDetection((note) => setDetectedNote(note));
-        stopListeningRef.current = stopFn;
+        if (inputMode === 'midi') {
+          const stopFn = await startMIDIInput((event) => {
+            if (event.type === 'on') setDetectedNote(event.note);
+          });
+          stopListeningRef.current = stopFn;
+        } else {
+          const stopFn = await startPitchDetection((note) => setDetectedNote(note));
+          stopListeningRef.current = stopFn;
+        }
       } catch (e: any) {
-        const msg = e?.message || 'Microphone access failed';
-        console.error("Failed to start pitch detection:", msg);
+        const msg = e?.message || (inputMode === 'midi' ? 'MIDI connection failed' : 'Microphone access failed');
+        console.error("Failed to start input:", msg);
         setMicError(msg);
         setIsPracticeMode(false);
       } finally {
@@ -357,6 +372,29 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
 
           {/* Action buttons */}
           <div className="p-4 border-t border-stone-800 space-y-3">
+            {/* Input mode toggle */}
+            {midiAvailable && !isPracticeMode && (
+              <div className="flex items-center gap-2 justify-center">
+                <span className="text-xs text-stone-500">Input:</span>
+                <div className="flex bg-stone-800 rounded-lg p-0.5">
+                  <button
+                    onClick={() => setInputMode('mic')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors min-h-[32px]
+                      ${inputMode === 'mic' ? 'bg-amber-700 text-white' : 'text-stone-400'}`}
+                  >
+                    <Mic size={12} /> Mic
+                  </button>
+                  <button
+                    onClick={() => setInputMode('midi')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors min-h-[32px]
+                      ${inputMode === 'midi' ? 'bg-amber-700 text-white' : 'text-stone-400'}`}
+                  >
+                    <Piano size={12} /> MIDI
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-3">
               <button
                 onClick={handlePlayDemo}
@@ -374,8 +412,12 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
                     ? 'bg-amber-700 text-white active:bg-amber-800'
                     : 'bg-amber-900/40 text-amber-400 border border-amber-800/50 active:bg-amber-900/60'}`}
               >
-                {isMicLoading ? <Loader2 size={18} className="animate-spin" /> : isPracticeMode ? <MicOff size={18} /> : <Mic size={18} />}
-                {isMicLoading ? 'Starting...' : isPracticeMode ? 'Stop' : 'Practice'}
+                {isMicLoading
+                  ? <Loader2 size={18} className="animate-spin" />
+                  : isPracticeMode
+                    ? <MicOff size={18} />
+                    : inputMode === 'midi' ? <Piano size={18} /> : <Mic size={18} />}
+                {isMicLoading ? 'Starting...' : isPracticeMode ? 'Stop' : `Practice (${inputMode === 'midi' ? 'MIDI' : 'Mic'})`}
               </button>
             </div>
 

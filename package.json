@@ -13,6 +13,7 @@
     "@capacitor/core": "^8.2.0",
     "@capacitor/haptics": "^8.0.1",
     "@capacitor/ios": "^8.2.0",
+    "@midiative/capacitor-midi-device": "^7.0.0",
     "lucide-react": "^0.562.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"

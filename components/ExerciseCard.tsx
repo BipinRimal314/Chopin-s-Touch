@@ -3,7 +3,7 @@ import { Exercise, ExerciseType } from '../types';
 import PianoVisualizer from './PianoVisualizer';
 import FallingNotes from './FallingNotes';
 import DynamicsMeter from './DynamicsMeter';
-import { Music, Volume2, Mic, MicOff, Check, RefreshCw, Info, Brain, BookOpen, Timer, Loader2 } from 'lucide-react';
+import { Music, Volume2, Mic, MicOff, Check, RefreshCw, Info, Brain, BookOpen, Timer, Loader2, Piano } from 'lucide-react';
 import { playSequence, stopSequence, ensureAudioReady } from '../utils/audio';
 import { startPitchDetection, normalizeNoteName } from '../utils/pitchDetection';
 import { startDynamicsDetection } from '../utils/dynamics';
@@ -11,6 +11,7 @@ import type { DynamicLevel } from '../utils/dynamics';
 import { startMetronome, stopMetronome, setMetronomeBPM } from '../utils/metronome';
 import { markExercisePracticed, saveBestAccuracy, unlockAchievement } from '../utils/storage';
 import { successHaptic } from '../utils/haptics';
+import { isMIDIAvailable, startMIDIInput, velocityToDynamic } from '../utils/midi';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -28,6 +29,8 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
   const [micError, setMicError] = useState<string | null>(null);
   const [isMicLoading, setIsMicLoading] = useState(false);
   const [missCount, setMissCount] = useState(0);
+  const [inputMode, setInputMode] = useState<'mic' | 'midi'>('mic');
+  const [midiAvailable, setMidiAvailable] = useState(false);
 
   // Dynamics detection state
   const [currentDynamic, setCurrentDynamic] = useState<DynamicLevel>('pp');
@@ -64,6 +67,11 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
       if (missDebounceRef.current) window.clearTimeout(missDebounceRef.current);
       stopMetronome();
     };
+  }, []);
+
+  // Check if MIDI is available on mount
+  useEffect(() => {
+    isMIDIAvailable().then(setMidiAvailable);
   }, []);
 
   // Update metronome BPM when tempo changes
@@ -112,23 +120,37 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
 
       try {
         setMicError(null);
-        const stopFn = await startPitchDetection((note) => {
-           setDetectedNote(note);
-        });
-        stopListeningRef.current = stopFn;
 
-        // Start dynamics detection alongside pitch detection if exercise has targets.
-        // Uses a separate AudioContext + AnalyserNode so the two don't interfere.
-        if (hasDynamics) {
-          const stopDyn = await startDynamicsDetection((level, rms) => {
-            setCurrentDynamic(level);
-            setCurrentRms(rms);
+        if (inputMode === 'midi') {
+          // MIDI input: note events come with velocity (no mic needed)
+          const stopFn = await startMIDIInput((event) => {
+            if (event.type === 'on') {
+              setDetectedNote(event.note);
+              if (hasDynamics) {
+                setCurrentDynamic(velocityToDynamic(event.velocity));
+                setCurrentRms(event.velocity / 127);
+              }
+            }
           });
-          stopDynamicsRef.current = stopDyn;
+          stopListeningRef.current = stopFn;
+        } else {
+          // Mic input: pitch detection + optional dynamics detection
+          const stopFn = await startPitchDetection((note) => {
+            setDetectedNote(note);
+          });
+          stopListeningRef.current = stopFn;
+
+          if (hasDynamics) {
+            const stopDyn = await startDynamicsDetection((level, rms) => {
+              setCurrentDynamic(level);
+              setCurrentRms(rms);
+            });
+            stopDynamicsRef.current = stopDyn;
+          }
         }
       } catch (e: any) {
-        const msg = e?.message || 'Microphone access failed';
-        console.error("Failed to start pitch detection:", msg);
+        const msg = e?.message || (inputMode === 'midi' ? 'MIDI connection failed' : 'Microphone access failed');
+        console.error("Failed to start input:", msg);
         setMicError(msg);
         setIsPracticeMode(false);
       } finally {
@@ -296,7 +318,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 text-stone-500 text-sm">
                   <Music size={16} />
-                  <span>{isMicLoading ? 'Initializing mic...' : isPracticeMode ? 'Listening...' : 'Interactive Visualizer'}</span>
+                  <span>{isMicLoading ? `Initializing ${inputMode}...` : isPracticeMode ? `Listening (${inputMode === 'midi' ? 'MIDI' : 'Mic'})...` : 'Interactive Visualizer'}</span>
                 </div>
                 {isPracticeMode && (
                   <div className="font-mono text-xs text-stone-600">
@@ -410,6 +432,29 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
 
             {/* Action Buttons */}
             <div className="p-4 border-t border-stone-800 space-y-3">
+              {/* Input mode toggle (only shown when MIDI is available and not in practice mode) */}
+              {midiAvailable && !isPracticeMode && (
+                <div className="flex items-center gap-2 justify-center">
+                  <span className="text-xs text-stone-500">Input:</span>
+                  <div className="flex bg-stone-800 rounded-lg p-0.5">
+                    <button
+                      onClick={() => setInputMode('mic')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors min-h-[32px]
+                        ${inputMode === 'mic' ? 'bg-amber-700 text-white' : 'text-stone-400'}`}
+                    >
+                      <Mic size={12} /> Mic
+                    </button>
+                    <button
+                      onClick={() => setInputMode('midi')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors min-h-[32px]
+                        ${inputMode === 'midi' ? 'bg-amber-700 text-white' : 'text-stone-400'}`}
+                    >
+                      <Piano size={12} /> MIDI
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Demo + Practice buttons row */}
               <div className="flex gap-3">
                 <button
@@ -435,8 +480,12 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
                       : 'bg-amber-900/40 text-amber-400 border border-amber-800/50 active:bg-amber-900/60'}
                   `}
                 >
-                  {isMicLoading ? <Loader2 size={18} className="animate-spin" /> : isPracticeMode ? <MicOff size={18} /> : <Mic size={18} />}
-                  {isMicLoading ? 'Starting...' : isPracticeMode ? 'Stop Practice' : 'Start Practice'}
+                  {isMicLoading
+                    ? <Loader2 size={18} className="animate-spin" />
+                    : isPracticeMode
+                      ? <MicOff size={18} />
+                      : inputMode === 'midi' ? <Piano size={18} /> : <Mic size={18} />}
+                  {isMicLoading ? 'Starting...' : isPracticeMode ? 'Stop Practice' : `Practice (${inputMode === 'midi' ? 'MIDI' : 'Mic'})`}
                 </button>
               </div>
 
