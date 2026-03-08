@@ -4,7 +4,7 @@ import PianoVisualizer from './PianoVisualizer';
 import FallingNotes from './FallingNotes';
 import DynamicsMeter from './DynamicsMeter';
 import { Music, Volume2, Mic, MicOff, Check, RefreshCw, Info, Brain, BookOpen, Timer, Loader2, Piano } from 'lucide-react';
-import { playSequence, stopSequence, ensureAudioReady } from '../utils/audio';
+import { useAudio } from '../hooks/useAudio';
 import { startPitchDetection, normalizeNoteName } from '../utils/pitchDetection';
 import { startDynamicsDetection } from '../utils/dynamics';
 import type { DynamicLevel } from '../utils/dynamics';
@@ -19,7 +19,7 @@ interface ExerciseCardProps {
 }
 
 const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => {
-  const [isPlayingDemo, setIsPlayingDemo] = useState(false);
+  const { init: initAudio, playSequence, stopSequence, isPlayingSequence } = useAudio();
   const [isPracticeMode, setIsPracticeMode] = useState(false);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
   const [detectedNote, setDetectedNote] = useState<string | null>(null);
@@ -47,8 +47,8 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
   // Current target dynamic for the active note (supports per-note or single-value arrays)
   const currentTargetDynamic: DynamicLevel | null = hasDynamics
     ? (exercise.targetDynamic!.length === 1
-        ? exercise.targetDynamic![0]
-        : exercise.targetDynamic![currentNoteIndex] ?? null)
+      ? exercise.targetDynamic![0]
+      : exercise.targetDynamic![currentNoteIndex] ?? null)
     : null;
 
   // Dynamic octave range based on exercise notes
@@ -88,16 +88,13 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
   }, [tempo, metronomeOn]);
 
   const handlePlayDemo = async () => {
-    ensureAudioReady();
-    if (isPlayingDemo) {
+    initAudio();
+    if (isPlayingSequence) {
       stopSequence();
-      setIsPlayingDemo(false);
       return;
     }
     if (isPracticeMode) handleTogglePractice();
-    setIsPlayingDemo(true);
     await playSequence(exercise.notes, tempo, exercise.durations);
-    setIsPlayingDemo(false);
   };
 
   const handleTogglePractice = async () => {
@@ -168,10 +165,10 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
   };
 
   const handleResetPractice = () => {
-     setCurrentNoteIndex(0);
-     setSuccessNote(null);
-     setDetectedNote(null);
-     setMissCount(0);
+    setCurrentNoteIndex(0);
+    setSuccessNote(null);
+    setDetectedNote(null);
+    setMissCount(0);
   };
 
   const toggleMetronome = () => {
@@ -195,15 +192,15 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
     const normalizedDetected = normalizeNoteName(detectedNote);
 
     if (normalizedDetected === normalizedTarget) {
-       if (debounceRef.current === null) {
-          setSuccessNote(targetNote);
-          successHaptic();
-          debounceRef.current = window.setTimeout(() => {
-             setCurrentNoteIndex(prev => prev + 1);
-             setSuccessNote(null);
-             debounceRef.current = null;
-          }, 400);
-       }
+      if (debounceRef.current === null) {
+        setSuccessNote(targetNote);
+        successHaptic();
+        debounceRef.current = window.setTimeout(() => {
+          setCurrentNoteIndex(prev => prev + 1);
+          setSuccessNote(null);
+          debounceRef.current = null;
+        }, 400);
+      }
     } else {
       // Count miss (debounced — max 1 per second to avoid noise)
       if (missDebounceRef.current === null) {
@@ -472,13 +469,13 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
                   disabled={isPracticeMode}
                   className={`
                     flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold transition-colors min-h-[48px]
-                    ${isPlayingDemo
+                    ${isPlayingSequence
                       ? 'bg-amber-700 text-white active:bg-amber-800'
                       : 'bg-stone-800 text-stone-200 active:bg-stone-700 disabled:opacity-30'}
                   `}
                 >
                   <Volume2 size={18} />
-                  {isPlayingDemo ? 'Stop' : 'Hear Demo'}
+                  {isPlayingSequence ? 'Stop' : 'Hear Demo'}
                 </button>
 
                 <button
