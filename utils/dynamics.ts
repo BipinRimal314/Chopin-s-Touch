@@ -64,7 +64,7 @@ export async function startDynamicsDetection(
 
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
   if (audioContext.state === 'suspended') {
     await audioContext.resume();

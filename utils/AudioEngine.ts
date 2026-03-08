@@ -26,7 +26,7 @@ export class AudioEngine {
 
   private createContext(): void {
     if (this.audioContext) return;
-    this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     this.masterGain = this.audioContext!.createGain();
     this.masterGain.connect(this.audioContext!.destination);
     this.masterGain.gain.value = 0.7;

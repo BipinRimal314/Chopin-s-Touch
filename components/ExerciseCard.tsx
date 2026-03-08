@@ -153,8 +153,8 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
             stopDynamicsRef.current = stopDyn;
           }
         }
-      } catch (e: any) {
-        const msg = e?.message || (inputMode === 'midi' ? 'MIDI connection failed' : 'Microphone access failed');
+      } catch (e: unknown) {
+        const msg = (e instanceof Error ? e.message : null) || (inputMode === 'midi' ? 'MIDI connection failed' : 'Microphone access failed');
         console.error("Failed to start input:", msg);
         setMicError(msg);
         setIsPracticeMode(false);

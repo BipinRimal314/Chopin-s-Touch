@@ -113,8 +113,8 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
           const stopFn = await startPitchDetection((note) => setDetectedNote(note));
           stopListeningRef.current = stopFn;
         }
-      } catch (e: any) {
-        const msg = e?.message || (inputMode === 'midi' ? 'MIDI connection failed' : 'Microphone access failed');
+      } catch (e: unknown) {
+        const msg = (e instanceof Error ? e.message : null) || (inputMode === 'midi' ? 'MIDI connection failed' : 'Microphone access failed');
         console.error("Failed to start input:", msg);
         setMicError(msg);
         setIsPracticeMode(false);

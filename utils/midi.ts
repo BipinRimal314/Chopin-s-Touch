@@ -128,7 +128,7 @@ export async function startMIDIInput(
 // --- Capacitor Plugin Backend ---
 
 async function startCapacitorMIDI(
-  plugin: any,
+  plugin: typeof import('@midiative/capacitor-midi-device').CapacitorMIDIDevice,
   onNote: (event: MIDINoteEvent) => void,
 ): Promise<() => void> {
   // Open the first device
