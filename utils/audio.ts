@@ -1,3 +1,5 @@
+import { stopMetronome } from './metronome';
+
 const NOTE_FREQUENCIES: Record<string, number> = {
   'C3': 130.81, 'C#3': 138.59, 'Db3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'Eb3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'Gb3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'Ab3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'Bb3': 233.08, 'B3': 246.94,
   'C4': 261.63, 'C#4': 277.18, 'Db4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'Eb4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'Gb4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'Ab4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'Bb4': 466.16, 'B4': 493.88,
@@ -7,6 +9,7 @@ const NOTE_FREQUENCIES: Record<string, number> = {
 let audioContext: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let isUnlocked = false;
+let pipelineActivated = false;
 
 // Map of currently active notes: noteName -> { oscillators, gains } for proper release
 const activeNotes = new Map<string, {
@@ -33,12 +36,48 @@ const createContext = (): void => {
   masterGain.connect(audioContext.destination);
   masterGain.gain.value = 0.7;
 
-  // Reset unlock flag if iOS suspends the context (e.g., app backgrounded)
+  // Reset flags if iOS suspends the context (e.g., app backgrounded)
   audioContext.onstatechange = () => {
     if (audioContext?.state === 'suspended') {
       isUnlocked = false;
+      pipelineActivated = false;
     }
   };
+};
+
+/**
+ * Activate the iOS WKWebView audio rendering pipeline.
+ *
+ * On real iOS hardware in Capacitor's WKWebView, the AudioContext's output
+ * rendering pipeline does not fully activate until a MediaStream input source
+ * (from getUserMedia) is connected to the audio graph. Without this,
+ * AudioContext reports state 'running' but silently drops all output.
+ *
+ * This function requests mic access, briefly connects the stream to the
+ * AudioContext to kick the pipeline into gear, then cleans up. The pipeline
+ * stays active after disconnection.
+ */
+const activateIOSAudioPipeline = async (): Promise<void> => {
+  if (pipelineActivated || !audioContext) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const source = audioContext.createMediaStreamSource(stream);
+    // Route through a zero-gain node so no mic audio leaks to speakers
+    const muteGain = audioContext.createGain();
+    muteGain.gain.value = 0;
+    source.connect(muteGain);
+    muteGain.connect(audioContext.destination);
+    pipelineActivated = true;
+    // Pipeline is activated. Clean up after a brief moment.
+    setTimeout(() => {
+      source.disconnect();
+      muteGain.disconnect();
+      stream.getTracks().forEach(t => t.stop());
+    }, 250);
+  } catch {
+    // Mic permission denied or unavailable. Audio output will activate
+    // when Practice mode requests mic access later.
+  }
 };
 
 /**
@@ -47,6 +86,9 @@ const createContext = (): void => {
 export const initAudio = (): void => {
   createContext();
   ensureAudioReady();
+  // Fire-and-forget: activate iOS audio pipeline via brief mic access.
+  // By the time the user navigates to an exercise, the pipeline will be ready.
+  activateIOSAudioPipeline();
 };
 
 /**
@@ -55,33 +97,47 @@ export const initAudio = (): void => {
  * MUST be called synchronously at the very top of any click/tap handler
  * that will produce sound — before any await or setState.
  *
- * iOS WKWebView doesn't just need resume() — it needs you to actually
- * PLAY something (even a silent buffer) within the user gesture's
- * synchronous call stack. Without this, the AudioContext stays muted.
+ * Resumes the AudioContext and plays a silent buffer within the gesture
+ * stack. Also re-triggers pipeline activation if it hasn't happened yet
+ * (e.g., if initAudio's attempt failed due to timing).
+ *
+ * Called on every gesture because iOS can silently re-suspend the audio
+ * session (app backgrounded, screen lock) without updating state.
  */
 export const ensureAudioReady = (): void => {
   createContext();
   if (!audioContext) return;
 
-  // Resume if suspended
+  // Resume AudioContext if suspended
   if (audioContext.state === 'suspended') {
     audioContext.resume();
   }
 
-  // iOS WKWebView audio unlock: play a silent buffer within the gesture.
-  // This is the only reliable way to unmute audio in Capacitor.
-  // We do this every time the context is not confirmed unlocked,
-  // because iOS can re-suspend the context when the app backgrounds.
-  if (!isUnlocked) {
-    const buffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
-    const source = audioContext.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContext.destination);
-    source.start(0);
-    source.onended = () => {
-      isUnlocked = true;
-    };
+  // Silent buffer through AudioContext (gesture-stack unlock)
+  const buffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
+  const source = audioContext.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audioContext.destination);
+  source.start(0);
+
+  // If the pipeline wasn't activated yet (initAudio didn't run or mic was
+  // denied initially), try again on this gesture
+  if (!pipelineActivated) {
+    activateIOSAudioPipeline();
   }
+
+  isUnlocked = true;
+};
+
+/**
+ * Await the AudioContext reaching 'running' state.
+ * Call ensureAudioReady() synchronously FIRST (for the gesture registration),
+ * then await this before scheduling any audio.
+ */
+export const waitForAudioReady = (): Promise<void> => {
+  if (!audioContext) return Promise.resolve();
+  if (audioContext.state === 'running') return Promise.resolve();
+  return audioContext.resume();
 };
 
 /**
@@ -228,6 +284,43 @@ export const stopNote = (noteName: string): void => {
   activeNotes.delete(noteName);
 };
 
+// Flag to cancel an in-progress accompaniment
+let accompanimentCancelled = false;
+
+/**
+ * Play an accompaniment line (left-hand bass notes) independently of the main sequence.
+ * Uses its own cancel flag so both melody and accompaniment can run simultaneously.
+ *
+ * @param notes - Array of note names to play in order
+ * @param bpm - Tempo in beats per minute
+ * @param durations - Optional array of duration multipliers relative to a quarter note.
+ *   1 = quarter, 2 = half, 4 = whole. Defaults to whole notes (4) when undefined.
+ */
+export const playAccompaniment = async (notes: string[], bpm: number, durations?: number[]) => {
+  accompanimentCancelled = false;
+  const quarterMs = 60000 / bpm;
+
+  if (!audioContext) createContext();
+  if (!audioContext || audioContext.state !== 'running') return;
+
+  for (let i = 0; i < notes.length; i++) {
+    if (accompanimentCancelled) return;
+    const note = notes[i];
+    const durationMultiplier = durations?.[i] ?? 4; // default to whole notes
+    const intervalMs = quarterMs * durationMultiplier;
+    stopNote(note);
+    playNote(note, Math.min((intervalMs / 1000) * 1.5, 6.0));
+    await new Promise(r => setTimeout(r, intervalMs));
+  }
+};
+
+/**
+ * Stop any currently playing accompaniment immediately.
+ */
+export const stopAccompaniment = (): void => {
+  accompanimentCancelled = true;
+};
+
 // Flag to cancel an in-progress sequence
 let sequenceCancelled = false;
 
@@ -240,6 +333,17 @@ export const stopSequence = (): void => {
   for (const noteName of activeNotes.keys()) {
     stopNote(noteName);
   }
+};
+
+/**
+ * Stop ALL audio: cancel any in-progress sequence, stop all active notes,
+ * and stop the metronome. Used for navigation cleanup when leaving
+ * exercise or piece-player views.
+ */
+export const stopAll = (): void => {
+  stopSequence();
+  stopAccompaniment();
+  stopMetronome();
 };
 
 /**

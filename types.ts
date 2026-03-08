@@ -63,6 +63,10 @@ export interface PieceSection {
   notes: string[];       // Note IDs like "C4", "E4"
   fingerings: KeyFinger[];
   hand: Hand;
+  accompaniment?: {
+    notes: string[];
+    durations?: number[];  // same format as Exercise durations (1=quarter, 2=half, 4=whole)
+  };
 }
 
 export interface Piece {

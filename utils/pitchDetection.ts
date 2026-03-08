@@ -1,4 +1,5 @@
 // Utilities for detecting pitch from audio stream
+import { getAudioContext } from './audio';
 
 const NOTE_STRINGS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
@@ -107,9 +108,9 @@ export const startPitchDetection = async (
   // Throws NotAllowedError if denied, NotFoundError if no mic.
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  // Use the shared AudioContext (iOS allows max ~4 concurrent contexts)
+  const audioContext = getAudioContext();
 
-  // iOS Safari requires resume within user gesture context
   if (audioContext.state === 'suspended') {
     await audioContext.resume();
   }
@@ -145,12 +146,10 @@ export const startPitchDetection = async (
 
     clearInterval(intervalId);
 
+    // Disconnect the analyser from the shared context (don't close it)
+    mediaStreamSource.disconnect();
+
     // Release the media stream tracks (turns off the mic indicator on iOS)
     stream.getTracks().forEach(track => track.stop());
-
-    // Close the AudioContext
-    if (audioContext.state !== 'closed') {
-      audioContext.close();
-    }
   };
 };

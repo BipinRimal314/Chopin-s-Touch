@@ -4,7 +4,7 @@ import PianoVisualizer from './PianoVisualizer';
 import FallingNotes from './FallingNotes';
 import DynamicsMeter from './DynamicsMeter';
 import { Music, Volume2, Mic, MicOff, Check, RefreshCw, Info, Brain, BookOpen, Timer, Loader2, Piano } from 'lucide-react';
-import { playSequence, stopSequence, ensureAudioReady } from '../utils/audio';
+import { playSequence, stopSequence, ensureAudioReady, waitForAudioReady } from '../utils/audio';
 import { startPitchDetection, normalizeNoteName } from '../utils/pitchDetection';
 import { startDynamicsDetection } from '../utils/dynamics';
 import type { DynamicLevel } from '../utils/dynamics';
@@ -69,6 +69,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
   // Clean up on unmount
   useEffect(() => {
     return () => {
+      stopSequence();
       if (stopListeningRef.current) stopListeningRef.current();
       if (stopDynamicsRef.current) stopDynamicsRef.current();
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
@@ -88,6 +89,8 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
   }, [tempo, metronomeOn]);
 
   const handlePlayDemo = async () => {
+    // MUST be first — iOS WKWebView requires resume() + silent buffer
+    // in the synchronous tap stack to unlock audio output
     ensureAudioReady();
     if (isPlayingDemo) {
       stopSequence();
@@ -95,6 +98,9 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onComplete }) => 
       return;
     }
     if (isPracticeMode) handleTogglePractice();
+    // Wait for the context to actually reach 'running' before scheduling
+    // notes. On real iOS hardware, resume() takes longer than in simulators.
+    await waitForAudioReady();
     setIsPlayingDemo(true);
     await playSequence(exercise.notes, tempo, exercise.durations);
     setIsPlayingDemo(false);

@@ -9,7 +9,7 @@ import Settings from './components/Settings';
 import StatsView from './components/StatsView';
 import PracticeTimer from './components/PracticeTimer';
 import { Exercise, Piece } from './types';
-import { initAudio } from './utils/audio';
+import { initAudio, stopAll } from './utils/audio';
 import { DAILY_DOZEN_IDS } from './constants';
 import { saveSession, markExercisePracticed, markPracticeDay, checkAndUnlockAchievements, resetAllPracticeData } from './utils/storage';
 import { isBluetoothAudioActive } from './utils/bluetooth';
@@ -66,10 +66,16 @@ function App() {
       isBluetoothAudioActive().then(setBluetoothWarning);
     }
 
-    if (wasActive && !isActive && sessionStartRef.current) {
-      const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000);
-      saveSession(elapsed);
-      sessionStartRef.current = null;
+    if (wasActive && !isActive) {
+      // Stop all audio (demo playback, active notes, metronome) when
+      // navigating away from exercise or piece-player views
+      stopAll();
+
+      if (sessionStartRef.current) {
+        const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000);
+        saveSession(elapsed);
+        sessionStartRef.current = null;
+      }
     }
 
     prevViewRef.current = currentView;

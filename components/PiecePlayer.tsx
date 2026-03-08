@@ -3,7 +3,7 @@ import { Piece } from '../types';
 import PianoVisualizer from './PianoVisualizer';
 import FallingNotes from './FallingNotes';
 import { Music, Volume2, Mic, MicOff, Check, RefreshCw, ChevronDown, Timer, Loader2, Piano } from 'lucide-react';
-import { playSequence, stopSequence, ensureAudioReady } from '../utils/audio';
+import { playSequence, stopSequence, playAccompaniment, stopAccompaniment, ensureAudioReady, waitForAudioReady } from '../utils/audio';
 import { startPitchDetection, normalizeNoteName } from '../utils/pitchDetection';
 import { startMetronome, stopMetronome, setMetronomeBPM } from '../utils/metronome';
 import { saveBestAccuracy } from '../utils/storage';
@@ -30,12 +30,14 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
   const [missCount, setMissCount] = useState(0);
   const [inputMode, setInputMode] = useState<'mic' | 'midi'>('mic');
   const [midiAvailable, setMidiAvailable] = useState(false);
+  const [accompanimentOn, setAccompanimentOn] = useState(false);
 
   const stopListeningRef = useRef<(() => void) | null>(null);
   const debounceRef = useRef<number | null>(null);
   const missDebounceRef = useRef<number | null>(null);
 
   const activeSection = piece.sections[activeSectionIdx];
+  const hasAccompaniment = activeSection.accompaniment && activeSection.accompaniment.notes.length > 0;
 
   // Determine which octaves the piano needs to show
   const allNotes = activeSection.notes;
@@ -56,6 +58,8 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
   // Cleanup
   useEffect(() => {
     return () => {
+      stopSequence();
+      stopAccompaniment();
       if (stopListeningRef.current) stopListeningRef.current();
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
       if (missDebounceRef.current) window.clearTimeout(missDebounceRef.current);
@@ -74,16 +78,26 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
   }, [tempo, metronomeOn]);
 
   const handlePlayDemo = async () => {
-    // MUST be first — iOS WKWebView requires resume() in the synchronous tap stack
+    // MUST be first — iOS WKWebView requires resume() + silent buffer
+    // in the synchronous tap stack to unlock audio output
     ensureAudioReady();
     if (isPlayingDemo) {
       stopSequence();
+      stopAccompaniment();
       setIsPlayingDemo(false);
       return;
     }
     if (isPracticeMode) handleTogglePractice();
+    // Wait for the context to actually reach 'running' before scheduling
+    // notes. On real iOS hardware, resume() takes longer than in simulators.
+    await waitForAudioReady();
     setIsPlayingDemo(true);
+    // Start accompaniment in parallel with demo when enabled
+    if (accompanimentOn && hasAccompaniment) {
+      playAccompaniment(activeSection.accompaniment!.notes, tempo, activeSection.accompaniment!.durations);
+    }
     await playSequence(activeSection.notes, tempo);
+    stopAccompaniment();
     setIsPlayingDemo(false);
   };
 
@@ -93,6 +107,7 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
       setDetectedNote(null);
       setSuccessNote(null);
       setCurrentNoteIndex(0);
+      stopAccompaniment();
       if (stopListeningRef.current) {
         stopListeningRef.current();
         stopListeningRef.current = null;
@@ -112,6 +127,10 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
         } else {
           const stopFn = await startPitchDetection((note) => setDetectedNote(note));
           stopListeningRef.current = stopFn;
+        }
+        // Start accompaniment playback alongside practice
+        if (accompanimentOn && hasAccompaniment) {
+          playAccompaniment(activeSection.accompaniment!.notes, tempo, activeSection.accompaniment!.durations);
         }
       } catch (e: any) {
         const msg = e?.message || (inputMode === 'midi' ? 'MIDI connection failed' : 'Microphone access failed');
@@ -358,7 +377,7 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
             </div>
           </div>
 
-          {/* Tempo + Metronome */}
+          {/* Tempo + Metronome + Accompaniment */}
           <div className="px-4 py-2 border-t border-stone-800/50 flex items-center gap-3">
             <button
               onClick={toggleMetronome}
@@ -368,6 +387,17 @@ const PiecePlayer: React.FC<PiecePlayerProps> = ({ piece, onComplete }) => {
             >
               <Timer size={16} />
             </button>
+            {hasAccompaniment && (
+              <button
+                onClick={() => setAccompanimentOn(prev => !prev)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors min-h-[36px]
+                  ${accompanimentOn ? 'bg-amber-700 text-white' : 'bg-stone-800 text-stone-400 active:bg-stone-700'}`}
+                title="Accompaniment (left hand)"
+              >
+                <Music size={14} />
+                <span className="hidden sm:inline">Accomp.</span>
+              </button>
+            )}
             <span className="text-xs text-stone-500 w-8 text-right">{tempo}</span>
             <input
               type="range"

@@ -28,6 +28,10 @@ export const PIECES: Piece[] = [
           { note: 'G4', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['C3', 'G3', 'C3', 'G3'],
+          durations: [4, 4, 4, 4],
+        },
       },
       {
         name: 'Second Ending',
@@ -43,6 +47,10 @@ export const PIECES: Piece[] = [
           { note: 'G4', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['C3', 'G3', 'C3', 'G3'],
+          durations: [4, 4, 4, 4],
+        },
       },
     ],
     tips: [
@@ -76,6 +84,10 @@ export const PIECES: Piece[] = [
           { note: 'G4', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['C3', 'G3', 'C3', 'G3'],
+          durations: [4, 4, 4, 4],
+        },
       },
       {
         name: 'Verse 2',
@@ -89,6 +101,10 @@ export const PIECES: Piece[] = [
           { note: 'E4', finger: 3, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['C3', 'G3', 'C3', 'G3'],
+          durations: [4, 4, 4, 4],
+        },
       },
     ],
     tips: [
@@ -123,6 +139,10 @@ export const PIECES: Piece[] = [
           { note: 'A4', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['C3', 'G3', 'F3', 'C3', 'G3', 'C3'],
+          durations: [2, 2, 2, 2, 2, 4],
+        },
       },
       {
         name: 'B Section (Bridge)',
@@ -137,6 +157,10 @@ export const PIECES: Piece[] = [
           { note: 'G4', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['G3', 'F3', 'E3', 'D3', 'G3', 'F3', 'E3', 'D3'],
+          durations: [2, 2, 2, 2, 2, 2, 2, 2],
+        },
       },
       {
         name: "A' Section (Return)",
@@ -153,6 +177,10 @@ export const PIECES: Piece[] = [
           { note: 'A4', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['C3', 'G3', 'F3', 'C3', 'G3', 'C3'],
+          durations: [2, 2, 2, 2, 2, 4],
+        },
       },
     ],
     tips: [
@@ -178,42 +206,84 @@ export const PIECES: Piece[] = [
     sections: [
       {
         name: 'C Major',
-        notes: ['C4', 'E4', 'G4', 'C5', 'E5', 'C5', 'G4', 'E4'],
+        notes: [
+          'C4', 'E4', 'G4', 'C5', 'E5', 'G4', 'C5', 'E5',
+          'C4', 'E4', 'G4', 'C5', 'E5', 'G4', 'C5', 'E5',
+        ],
         fingerings: [
           { note: 'C4', finger: 1, hand: 'right' },
           { note: 'E4', finger: 2, hand: 'right' },
           { note: 'G4', finger: 3, hand: 'right' },
-          { note: 'C5', finger: 5, hand: 'right' },
+          { note: 'C5', finger: 4, hand: 'right' },
           { note: 'E5', finger: 5, hand: 'right' },
         ],
         hand: 'right',
       },
       {
-        name: 'D minor',
-        notes: ['D4', 'F4', 'A4', 'D5', 'F5', 'D5', 'A4', 'F4'],
+        name: 'Dm7',
+        notes: [
+          'D4', 'F4', 'A4', 'D5', 'F5', 'A4', 'D5', 'F5',
+          'D4', 'F4', 'A4', 'D5', 'F5', 'A4', 'D5', 'F5',
+        ],
         fingerings: [
           { note: 'D4', finger: 1, hand: 'right' },
           { note: 'F4', finger: 2, hand: 'right' },
           { note: 'A4', finger: 3, hand: 'right' },
-          { note: 'D5', finger: 5, hand: 'right' },
+          { note: 'D5', finger: 4, hand: 'right' },
           { note: 'F5', finger: 5, hand: 'right' },
         ],
         hand: 'right',
       },
       {
         name: 'G7',
-        notes: ['G3', 'B3', 'D4', 'F4', 'D4', 'B3', 'D4', 'F4'],
+        notes: [
+          'B3', 'D4', 'F4', 'G4', 'D4', 'F4', 'G4', 'D4',
+          'B3', 'D4', 'F4', 'G4', 'D4', 'F4', 'G4', 'D4',
+        ],
         fingerings: [
-          { note: 'G3', finger: 1, hand: 'right' },
-          { note: 'B3', finger: 2, hand: 'right' },
-          { note: 'D4', finger: 3, hand: 'right' },
-          { note: 'F4', finger: 5, hand: 'right' },
+          { note: 'B3', finger: 1, hand: 'right' },
+          { note: 'D4', finger: 2, hand: 'right' },
+          { note: 'F4', finger: 3, hand: 'right' },
+          { note: 'G4', finger: 5, hand: 'right' },
+        ],
+        hand: 'right',
+      },
+      {
+        name: 'Am7',
+        notes: [
+          'C4', 'E4', 'A4', 'C5', 'E5', 'A4', 'C5', 'E5',
+          'C4', 'E4', 'A4', 'C5', 'E5', 'A4', 'C5', 'E5',
+        ],
+        fingerings: [
+          { note: 'C4', finger: 1, hand: 'right' },
+          { note: 'E4', finger: 2, hand: 'right' },
+          { note: 'A4', finger: 3, hand: 'right' },
+          { note: 'C5', finger: 4, hand: 'right' },
+          { note: 'E5', finger: 5, hand: 'right' },
+        ],
+        hand: 'right',
+      },
+      {
+        name: 'F Major',
+        notes: [
+          'C4', 'F4', 'A4', 'C5', 'F5', 'A4', 'C5', 'F5',
+          'C4', 'F4', 'A4', 'C5', 'F5', 'A4', 'C5', 'F5',
+        ],
+        fingerings: [
+          { note: 'C4', finger: 1, hand: 'right' },
+          { note: 'F4', finger: 2, hand: 'right' },
+          { note: 'A4', finger: 3, hand: 'right' },
+          { note: 'C5', finger: 4, hand: 'right' },
+          { note: 'F5', finger: 5, hand: 'right' },
         ],
         hand: 'right',
       },
       {
         name: 'C Major (Resolution)',
-        notes: ['C4', 'E4', 'G4', 'C5', 'G4', 'E4', 'G4', 'C5'],
+        notes: [
+          'C4', 'E4', 'G4', 'C5', 'G4', 'E4', 'G4', 'C5',
+          'C4', 'E4', 'G4', 'C5', 'G4', 'E4', 'C5', 'C4',
+        ],
         fingerings: [
           { note: 'C4', finger: 1, hand: 'right' },
           { note: 'E4', finger: 2, hand: 'right' },
@@ -243,7 +313,11 @@ export const PIECES: Piece[] = [
     sections: [
       {
         name: 'Opening Motif',
-        notes: ['E5', 'D#5', 'E5', 'D#5', 'E5', 'B4', 'D5', 'C5', 'A4'],
+        notes: [
+          'E5', 'D#5', 'E5', 'D#5', 'E5', 'B4', 'D5', 'C5', 'A4',
+          'C4', 'E4', 'A4', 'B4', 'E4', 'G#4', 'B4', 'C5',
+          'E5', 'D#5', 'E5', 'D#5', 'E5', 'B4', 'D5', 'C5', 'A4',
+        ],
         fingerings: [
           { note: 'E5', finger: 5, hand: 'right' },
           { note: 'D#5', finger: 4, hand: 'right' },
@@ -251,12 +325,22 @@ export const PIECES: Piece[] = [
           { note: 'D5', finger: 4, hand: 'right' },
           { note: 'C5', finger: 3, hand: 'right' },
           { note: 'A4', finger: 1, hand: 'right' },
+          { note: 'C4', finger: 1, hand: 'right' },
+          { note: 'E4', finger: 2, hand: 'right' },
+          { note: 'G#4', finger: 3, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['A3', 'E3', 'A3', 'E3', 'A3', 'E3'],
+          durations: [4, 4, 4, 4, 4, 4],
+        },
       },
       {
         name: 'Resolution A',
-        notes: ['C4', 'E4', 'A4', 'B4', 'E4', 'G#4', 'B4', 'C5'],
+        notes: [
+          'C4', 'E4', 'A4', 'B4', 'E4', 'G#4', 'B4', 'C5',
+          'E5', 'D#5', 'E5', 'D#5', 'E5', 'B4', 'D5', 'C5', 'A4',
+        ],
         fingerings: [
           { note: 'C4', finger: 1, hand: 'right' },
           { note: 'E4', finger: 2, hand: 'right' },
@@ -264,12 +348,23 @@ export const PIECES: Piece[] = [
           { note: 'B4', finger: 5, hand: 'right' },
           { note: 'G#4', finger: 3, hand: 'right' },
           { note: 'C5', finger: 5, hand: 'right' },
+          { note: 'E5', finger: 5, hand: 'right' },
+          { note: 'D#5', finger: 4, hand: 'right' },
+          { note: 'D5', finger: 4, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['A3', 'E3', 'A3', 'E3'],
+          durations: [4, 4, 4, 4],
+        },
       },
       {
         name: 'Motif Repeat',
-        notes: ['E5', 'D#5', 'E5', 'D#5', 'E5', 'B4', 'D5', 'C5', 'A4'],
+        notes: [
+          'E5', 'D#5', 'E5', 'D#5', 'E5', 'B4', 'D5', 'C5', 'A4',
+          'C4', 'E4', 'A4', 'B4', 'E4', 'G#4', 'B4', 'C5',
+          'E5', 'D#5', 'E5', 'D#5', 'E5', 'B4', 'D5', 'C5', 'A4',
+        ],
         fingerings: [
           { note: 'E5', finger: 5, hand: 'right' },
           { note: 'D#5', finger: 4, hand: 'right' },
@@ -277,20 +372,40 @@ export const PIECES: Piece[] = [
           { note: 'D5', finger: 4, hand: 'right' },
           { note: 'C5', finger: 3, hand: 'right' },
           { note: 'A4', finger: 1, hand: 'right' },
+          { note: 'C4', finger: 1, hand: 'right' },
+          { note: 'E4', finger: 2, hand: 'right' },
+          { note: 'G#4', finger: 3, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['A3', 'E3', 'A3', 'E3', 'A3', 'E3'],
+          durations: [4, 4, 4, 4, 4, 4],
+        },
       },
       {
         name: 'Resolution B (Final)',
-        notes: ['C4', 'E4', 'A4', 'B4', 'E4', 'C5', 'B4', 'A4'],
+        notes: [
+          'C4', 'E4', 'A4', 'B4', 'E4', 'C5', 'B4', 'A4',
+          'A4', 'B4', 'C5', 'D5', 'E5', 'G4', 'F5', 'E5',
+          'D5', 'F4', 'E5', 'D5', 'C5', 'E4', 'D5', 'C5', 'B4',
+        ],
         fingerings: [
           { note: 'C4', finger: 1, hand: 'right' },
           { note: 'E4', finger: 2, hand: 'right' },
           { note: 'A4', finger: 4, hand: 'right' },
           { note: 'B4', finger: 5, hand: 'right' },
           { note: 'C5', finger: 5, hand: 'right' },
+          { note: 'D5', finger: 4, hand: 'right' },
+          { note: 'E5', finger: 5, hand: 'right' },
+          { note: 'G4', finger: 2, hand: 'right' },
+          { note: 'F5', finger: 5, hand: 'right' },
+          { note: 'F4', finger: 1, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['A3', 'E3', 'A3', 'E3', 'A3', 'E3'],
+          durations: [4, 4, 4, 4, 4, 4],
+        },
       },
     ],
     tips: [
@@ -326,6 +441,10 @@ export const PIECES: Piece[] = [
           { note: 'E5', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['G3', 'D3', 'G3', 'D3'],
+          durations: [4, 4, 4, 4],
+        },
       },
       {
         name: 'Second Phrase',
@@ -341,6 +460,10 @@ export const PIECES: Piece[] = [
           { note: 'B4', finger: 3, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['G3', 'D3', 'G3', 'D3'],
+          durations: [4, 4, 4, 4],
+        },
       },
     ],
     tips: [
@@ -376,6 +499,10 @@ export const PIECES: Piece[] = [
           { note: 'G4', finger: 2, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['E3', 'B3', 'E3', 'B3'],
+          durations: [4, 4, 4, 4],
+        },
       },
       {
         name: 'Descent',
@@ -391,6 +518,10 @@ export const PIECES: Piece[] = [
           { note: 'D4', finger: 1, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['E3', 'B3', 'E3', 'B3'],
+          durations: [4, 4, 4, 4],
+        },
       },
       {
         name: 'Final Phrase',
@@ -407,6 +538,10 @@ export const PIECES: Piece[] = [
           { note: 'E4', finger: 1, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['E3', 'B3', 'E3', 'B3'],
+          durations: [4, 4, 4, 4],
+        },
       },
     ],
     tips: [
@@ -431,8 +566,9 @@ export const PIECES: Piece[] = [
       {
         name: 'Main Theme',
         notes: [
-          'F#5', 'E5', 'D5', 'C#5', 'E5', 'D5',
-          'C#5', 'B4', 'D5', 'C#5', 'B4', 'A4',
+          'F#5', 'E5', 'D5', 'C#5', 'E5', 'D5', 'C#5', 'B4',
+          'D5', 'C#5', 'B4', 'A4', 'B4', 'C#5', 'D5', 'E5',
+          'F#5', 'E5', 'D5', 'C#5',
         ],
         fingerings: [
           { note: 'F#5', finger: 5, hand: 'right' },
@@ -443,15 +579,43 @@ export const PIECES: Piece[] = [
           { note: 'A4', finger: 1, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['D3', 'A3', 'D3', 'A3', 'D3'],
+          durations: [4, 4, 4, 4, 4],
+        },
+      },
+      {
+        name: 'Second Phrase',
+        notes: [
+          'B4', 'A4', 'G4', 'F#4', 'A4', 'G4', 'F#4', 'E4',
+          'G4', 'F#4', 'E4', 'D4', 'E4', 'F#4', 'G4', 'A4',
+          'B4', 'A4',
+        ],
+        fingerings: [
+          { note: 'B4', finger: 5, hand: 'right' },
+          { note: 'A4', finger: 4, hand: 'right' },
+          { note: 'G4', finger: 3, hand: 'right' },
+          { note: 'F#4', finger: 2, hand: 'right' },
+          { note: 'E4', finger: 1, hand: 'right' },
+          { note: 'D4', finger: 1, hand: 'right' },
+        ],
+        hand: 'right',
+        accompaniment: {
+          notes: ['G3', 'D3', 'G3', 'D3', 'G3'],
+          durations: [4, 4, 4, 4, 4],
+        },
       },
       {
         name: 'Return',
         notes: [
-          'B4', 'C#5', 'D5', 'E5', 'F#5', 'E5',
-          'D5', 'C#5', 'B4', 'A4', 'F#4',
+          'B4', 'C#5', 'D5', 'E5', 'F#5', 'E5', 'D5', 'C#5',
+          'B4', 'A4', 'G4', 'F#4', 'E4', 'F#4', 'G4', 'A4',
+          'B4', 'C#5', 'D5', 'F#4',
         ],
         fingerings: [
+          { note: 'E4', finger: 1, hand: 'right' },
           { note: 'F#4', finger: 1, hand: 'right' },
+          { note: 'G4', finger: 2, hand: 'right' },
           { note: 'A4', finger: 2, hand: 'right' },
           { note: 'B4', finger: 3, hand: 'right' },
           { note: 'C#5', finger: 2, hand: 'right' },
@@ -460,6 +624,10 @@ export const PIECES: Piece[] = [
           { note: 'F#5', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['D3', 'A3', 'D3', 'A3', 'D3'],
+          durations: [4, 4, 4, 4, 4],
+        },
       },
     ],
     tips: [
@@ -483,8 +651,9 @@ export const PIECES: Piece[] = [
       {
         name: 'A Section',
         notes: [
-          'E5', 'D5', 'C5', 'B4', 'A4', 'B4', 'C5',
-          'D5', 'E5', 'E5', 'D5', 'C5', 'B4', 'A4',
+          'E5', 'D5', 'C5', 'B4', 'A4', 'B4', 'C5', 'D5',
+          'E5', 'E5', 'D5', 'C5', 'B4', 'A4', 'E4', 'A4',
+          'C5', 'B4', 'A4', 'G#4', 'A4',
         ],
         fingerings: [
           { note: 'E5', finger: 5, hand: 'right' },
@@ -492,14 +661,21 @@ export const PIECES: Piece[] = [
           { note: 'C5', finger: 3, hand: 'right' },
           { note: 'B4', finger: 2, hand: 'right' },
           { note: 'A4', finger: 1, hand: 'right' },
+          { note: 'E4', finger: 1, hand: 'right' },
+          { note: 'G#4', finger: 1, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['A3', 'E3', 'A3', 'E3', 'A3'],
+          durations: [4, 4, 4, 4, 4],
+        },
       },
       {
         name: 'B Section',
         notes: [
-          'A4', 'C5', 'E5', 'D5', 'C5', 'B4', 'A4',
-          'G#4', 'A4', 'B4', 'C5', 'A4',
+          'A4', 'C5', 'E5', 'D5', 'C5', 'B4', 'A4', 'G#4',
+          'A4', 'B4', 'C5', 'A4', 'E5', 'D5', 'C5', 'B4',
+          'A4', 'C5', 'B4', 'A4',
         ],
         fingerings: [
           { note: 'G#4', finger: 1, hand: 'right' },
@@ -510,6 +686,30 @@ export const PIECES: Piece[] = [
           { note: 'E5', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['A3', 'E3', 'A3', 'E3', 'A3'],
+          durations: [4, 4, 4, 4, 4],
+        },
+      },
+      {
+        name: "A' Return",
+        notes: [
+          'E5', 'D5', 'C5', 'B4', 'A4', 'B4', 'C5', 'D5',
+          'E5', 'D5', 'C5', 'B4', 'A4', 'G#4', 'A4',
+        ],
+        fingerings: [
+          { note: 'E5', finger: 5, hand: 'right' },
+          { note: 'D5', finger: 4, hand: 'right' },
+          { note: 'C5', finger: 3, hand: 'right' },
+          { note: 'B4', finger: 2, hand: 'right' },
+          { note: 'A4', finger: 1, hand: 'right' },
+          { note: 'G#4', finger: 1, hand: 'right' },
+        ],
+        hand: 'right',
+        accompaniment: {
+          notes: ['A3', 'E3', 'A3', 'E3'],
+          durations: [4, 4, 4, 4],
+        },
       },
     ],
     tips: [
@@ -538,7 +738,8 @@ export const PIECES: Piece[] = [
         name: 'Opening Theme',
         notes: [
           'Bb4', 'G4', 'Bb4', 'Bb4', 'C5', 'Bb4', 'Ab4',
-          'G4', 'F4', 'G4', 'Bb4', 'Ab4', 'G4',
+          'G4', 'F4', 'G4', 'Bb4', 'Ab4', 'G4', 'Eb5',
+          'D5', 'C5', 'Bb4', 'Ab4', 'G4', 'F4', 'G4',
         ],
         fingerings: [
           { note: 'F4', finger: 1, hand: 'right' },
@@ -546,14 +747,21 @@ export const PIECES: Piece[] = [
           { note: 'Ab4', finger: 3, hand: 'right' },
           { note: 'Bb4', finger: 4, hand: 'right' },
           { note: 'C5', finger: 5, hand: 'right' },
+          { note: 'Eb5', finger: 5, hand: 'right' },
+          { note: 'D5', finger: 4, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['Eb3', 'Bb3', 'Eb3', 'Bb3', 'Eb3', 'Bb3', 'Eb3'],
+          durations: [2, 2, 2, 2, 2, 2, 2],
+        },
       },
       {
         name: 'Continuation',
         notes: [
           'Eb4', 'F4', 'G4', 'Ab4', 'Bb4', 'C5', 'Bb4',
           'Ab4', 'G4', 'F4', 'Eb4', 'F4', 'G4', 'Eb4',
+          'Bb4', 'G4', 'Bb4', 'C5', 'Bb4', 'Ab4', 'G4',
         ],
         fingerings: [
           { note: 'Eb4', finger: 1, hand: 'right' },
@@ -564,6 +772,34 @@ export const PIECES: Piece[] = [
           { note: 'C5', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['Eb3', 'Bb3', 'Ab3', 'Eb3', 'Bb3', 'Eb3', 'Bb3'],
+          durations: [2, 2, 2, 2, 2, 2, 2],
+        },
+      },
+      {
+        name: 'Cadenza',
+        notes: [
+          'F4', 'G4', 'Ab4', 'Bb4', 'C5', 'D5', 'Eb5',
+          'D5', 'C5', 'Bb4', 'Ab4', 'G4', 'F4', 'Eb4',
+          'D4', 'Eb4',
+        ],
+        fingerings: [
+          { note: 'D4', finger: 1, hand: 'right' },
+          { note: 'Eb4', finger: 1, hand: 'right' },
+          { note: 'F4', finger: 1, hand: 'right' },
+          { note: 'G4', finger: 2, hand: 'right' },
+          { note: 'Ab4', finger: 3, hand: 'right' },
+          { note: 'Bb4', finger: 4, hand: 'right' },
+          { note: 'C5', finger: 4, hand: 'right' },
+          { note: 'D5', finger: 5, hand: 'right' },
+          { note: 'Eb5', finger: 5, hand: 'right' },
+        ],
+        hand: 'right',
+        accompaniment: {
+          notes: ['Ab3', 'Eb3', 'Bb3', 'Eb3'],
+          durations: [4, 4, 4, 4],
+        },
       },
     ],
     tips: [
@@ -588,10 +824,12 @@ export const PIECES: Piece[] = [
       {
         name: 'Main Theme',
         notes: [
-          'C#5', 'B4', 'A4', 'G#4', 'A4', 'B4', 'C#5',
-          'D#5', 'E5', 'D#5', 'C#5', 'B4', 'A4', 'G#4',
+          'C#5', 'B4', 'A4', 'G#4', 'A4', 'B4', 'C#5', 'D#5',
+          'E5', 'D#5', 'C#5', 'B4', 'A4', 'G#4', 'F#4', 'G#4',
+          'A4', 'B4', 'C#5',
         ],
         fingerings: [
+          { note: 'F#4', finger: 1, hand: 'right' },
           { note: 'G#4', finger: 1, hand: 'right' },
           { note: 'A4', finger: 2, hand: 'right' },
           { note: 'B4', finger: 3, hand: 'right' },
@@ -600,12 +838,38 @@ export const PIECES: Piece[] = [
           { note: 'E5', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['C#3', 'G#3', 'C#3', 'G#3', 'C#3'],
+          durations: [4, 4, 4, 4, 4],
+        },
+      },
+      {
+        name: 'Middle Section',
+        notes: [
+          'E5', 'D#5', 'C#5', 'B4', 'A4', 'G#4', 'A4', 'B4',
+          'C#5', 'D#5', 'E5', 'F#5', 'E5', 'D#5', 'C#5', 'B4',
+        ],
+        fingerings: [
+          { note: 'G#4', finger: 1, hand: 'right' },
+          { note: 'A4', finger: 2, hand: 'right' },
+          { note: 'B4', finger: 3, hand: 'right' },
+          { note: 'C#5', finger: 4, hand: 'right' },
+          { note: 'D#5', finger: 4, hand: 'right' },
+          { note: 'E5', finger: 5, hand: 'right' },
+          { note: 'F#5', finger: 5, hand: 'right' },
+        ],
+        hand: 'right',
+        accompaniment: {
+          notes: ['C#3', 'G#3', 'C#3', 'G#3'],
+          durations: [4, 4, 4, 4],
+        },
       },
       {
         name: 'Response',
         notes: [
-          'F#4', 'G#4', 'A4', 'B4', 'C#5', 'B4', 'A4',
-          'G#4', 'F#4', 'E4', 'F#4', 'G#4', 'A4',
+          'F#4', 'G#4', 'A4', 'B4', 'C#5', 'B4', 'A4', 'G#4',
+          'F#4', 'E4', 'F#4', 'G#4', 'A4', 'B4', 'C#5', 'B4',
+          'A4', 'G#4',
         ],
         fingerings: [
           { note: 'E4', finger: 1, hand: 'right' },
@@ -616,6 +880,10 @@ export const PIECES: Piece[] = [
           { note: 'C#5', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['C#3', 'G#3', 'C#3', 'G#3', 'C#3'],
+          durations: [4, 4, 4, 4, 4],
+        },
       },
     ],
     tips: [
@@ -640,9 +908,11 @@ export const PIECES: Piece[] = [
         name: 'Opening Melody',
         notes: [
           'F4', 'Ab4', 'Ab4', 'Ab4', 'Ab4', 'Bb4', 'Ab4',
-          'Gb4', 'F4', 'Eb4', 'F4', 'Ab4',
+          'Gb4', 'F4', 'Eb4', 'F4', 'Ab4', 'Bb4', 'Ab4',
+          'Gb4', 'F4', 'Eb4', 'Db4', 'Eb4', 'F4',
         ],
         fingerings: [
+          { note: 'Db4', finger: 1, hand: 'right' },
           { note: 'Eb4', finger: 1, hand: 'right' },
           { note: 'F4', finger: 2, hand: 'right' },
           { note: 'Gb4', finger: 3, hand: 'right' },
@@ -650,14 +920,20 @@ export const PIECES: Piece[] = [
           { note: 'Bb4', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['Db3', 'Ab3', 'Db3', 'Ab3', 'Db3'],
+          durations: [4, 4, 4, 4, 4],
+        },
       },
       {
         name: 'Continuation',
         notes: [
           'Bb4', 'Ab4', 'Gb4', 'F4', 'Eb4', 'F4', 'Gb4',
-          'Ab4', 'Bb4', 'Ab4', 'Gb4', 'F4',
+          'Ab4', 'Bb4', 'Ab4', 'Gb4', 'F4', 'Eb4', 'Db4',
+          'Eb4', 'F4', 'Gb4', 'Ab4', 'Bb4', 'Ab4',
         ],
         fingerings: [
+          { note: 'Db4', finger: 1, hand: 'right' },
           { note: 'Eb4', finger: 1, hand: 'right' },
           { note: 'F4', finger: 2, hand: 'right' },
           { note: 'Gb4', finger: 3, hand: 'right' },
@@ -665,6 +941,31 @@ export const PIECES: Piece[] = [
           { note: 'Bb4', finger: 5, hand: 'right' },
         ],
         hand: 'right',
+        accompaniment: {
+          notes: ['Db3', 'Ab3', 'Db3', 'Ab3', 'Db3'],
+          durations: [4, 4, 4, 4, 4],
+        },
+      },
+      {
+        name: 'Coda',
+        notes: [
+          'F4', 'Gb4', 'Ab4', 'Bb4', 'Ab4', 'Gb4', 'F4',
+          'Eb4', 'F4', 'Gb4', 'Ab4', 'Gb4', 'F4', 'Eb4',
+          'Db4', 'F4',
+        ],
+        fingerings: [
+          { note: 'Db4', finger: 1, hand: 'right' },
+          { note: 'Eb4', finger: 1, hand: 'right' },
+          { note: 'F4', finger: 2, hand: 'right' },
+          { note: 'Gb4', finger: 3, hand: 'right' },
+          { note: 'Ab4', finger: 4, hand: 'right' },
+          { note: 'Bb4', finger: 5, hand: 'right' },
+        ],
+        hand: 'right',
+        accompaniment: {
+          notes: ['Db3', 'Ab3', 'Db3', 'Ab3'],
+          durations: [4, 4, 4, 4],
+        },
       },
     ],
     tips: [
