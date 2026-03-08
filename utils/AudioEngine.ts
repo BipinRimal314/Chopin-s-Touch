@@ -1,3 +1,5 @@
+import { isNativeAudioReady, playNativeNote, stopNativeNote, stopAllNativeNotes, setNativeVolume, getNativeVolume } from './nativeAudio';
+
 const NOTE_FREQUENCIES: Record<string, number> = {
   'C3': 130.81, 'C#3': 138.59, 'Db3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'Eb3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'Gb3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'Ab3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'Bb3': 233.08, 'B3': 246.94,
   'C4': 261.63, 'C#4': 277.18, 'Db4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'Eb4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'Gb4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'Ab4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'Bb4': 466.16, 'B4': 493.88,
@@ -46,6 +48,9 @@ export class AudioEngine {
   }
 
   public ensureReady(): void {
+    // NativeAudio handles iOS audio session natively — no unlock needed
+    if (isNativeAudioReady()) return;
+
     this.createContext();
     if (!this.audioContext) return;
 
@@ -66,6 +71,13 @@ export class AudioEngine {
   }
 
   public playNote(noteName: string, duration = 1.5): void {
+    // Use NativeAudio on iOS for reliable playback.
+    // NativeAudio with audioChannelNum:1 auto-restarts on play(), no stop needed.
+    if (isNativeAudioReady()) {
+      playNativeNote(noteName);
+      return;
+    }
+
     if (!this.audioContext) {
       this.ensureReady();
     }
@@ -130,6 +142,11 @@ export class AudioEngine {
   }
 
   public stopNote(noteName: string): void {
+    if (isNativeAudioReady()) {
+      stopNativeNote(noteName);
+      return;
+    }
+
     const active = this.activeNotes.get(noteName);
     if (!active || !this.audioContext) return;
 
@@ -151,6 +168,10 @@ export class AudioEngine {
 
   public stopSequence(): void {
     this.sequenceCancelled = true;
+    if (isNativeAudioReady()) {
+      stopAllNativeNotes();
+      return;
+    }
     for (const noteName of this.activeNotes.keys()) {
       this.stopNote(noteName);
     }
@@ -160,22 +181,25 @@ export class AudioEngine {
     this.sequenceCancelled = false;
     const quarterMs = 60000 / bpm;
 
-    if (!this.audioContext) this.createContext();
-    if (!this.audioContext) return;
+    // NativeAudio doesn't need AudioContext — skip all Web Audio setup
+    if (!isNativeAudioReady()) {
+      if (!this.audioContext) this.createContext();
+      if (!this.audioContext) return;
 
-    if (this.audioContext.state !== 'running') {
-      await new Promise<void>((resolve) => {
-        const interval = setInterval(() => {
-          if (!this.audioContext || this.audioContext.state === 'running') {
-            clearInterval(interval);
-            resolve();
-          }
-        }, 10);
-        setTimeout(() => { clearInterval(interval); resolve(); }, 1000);
-      });
+      if (this.audioContext.state !== 'running') {
+        await new Promise<void>((resolve) => {
+          const interval = setInterval(() => {
+            if (!this.audioContext || this.audioContext.state === 'running') {
+              clearInterval(interval);
+              resolve();
+            }
+          }, 10);
+          setTimeout(() => { clearInterval(interval); resolve(); }, 1000);
+        });
+      }
+
+      if (!this.audioContext || this.audioContext.state !== 'running') return;
     }
-
-    if (!this.audioContext || this.audioContext.state !== 'running') return;
 
     for (let i = 0; i < notes.length; i++) {
       if (this.sequenceCancelled) return;
@@ -189,12 +213,15 @@ export class AudioEngine {
   }
 
   public setVolume(level: number): void {
+    const clamped = Math.max(0, Math.min(1, level));
+    setNativeVolume(clamped);
     if (this.masterGain) {
-      this.masterGain.gain.value = Math.max(0, Math.min(1, level));
+      this.masterGain.gain.value = clamped;
     }
   }
 
   public getVolume(): number {
+    if (isNativeAudioReady()) return getNativeVolume();
     return this.masterGain ? this.masterGain.gain.value : 0.7;
   }
 }

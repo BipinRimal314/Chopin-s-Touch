@@ -10,6 +10,7 @@ import StatsView from './components/StatsView';
 import PracticeTimer from './components/PracticeTimer';
 import { Exercise, Piece } from './types';
 import { initAudio } from './utils/audio';
+import { preloadNativeAudio } from './utils/nativeAudio';
 import { DAILY_DOZEN_IDS } from './constants';
 import { saveSession, markExercisePracticed, markPracticeDay, checkAndUnlockAchievements, resetAllPracticeData } from './utils/storage';
 import { isBluetoothAudioActive } from './utils/bluetooth';
@@ -38,7 +39,12 @@ function App() {
   const sessionStartRef = useRef<number | null>(null);
   const prevViewRef = useRef(currentView);
 
-  // Unlock iOS AudioContext on first user interaction
+  // Preload NativeAudio samples on startup (iOS only, no-op on web)
+  useEffect(() => {
+    preloadNativeAudio();
+  }, []);
+
+  // Unlock iOS AudioContext on first user interaction (fallback for web)
   useEffect(() => {
     const unlock = () => {
       if (!audioInitRef.current) {

@@ -10,6 +10,7 @@
     "ios": "vite build && npx cap sync ios && npx cap open ios"
   },
   "dependencies": {
+    "@capacitor-community/native-audio": "^8.0.0",
     "@capacitor/core": "^8.2.0",
     "@capacitor/haptics": "^8.0.1",
     "@capacitor/ios": "^8.2.0",

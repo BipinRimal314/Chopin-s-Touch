@@ -1,3 +1,5 @@
+import { isNativeAudioReady, playNativeNote, stopNativeNote, stopAllNativeNotes, setNativeVolume, getNativeVolume } from './nativeAudio';
+
 const NOTE_FREQUENCIES: Record<string, number> = {
   'C3': 130.81, 'C#3': 138.59, 'Db3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'Eb3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'Gb3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'Ab3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'Bb3': 233.08, 'B3': 246.94,
   'C4': 261.63, 'C#4': 277.18, 'Db4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'Eb4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'Gb4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'Ab4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'Bb4': 466.16, 'B4': 493.88,
@@ -60,6 +62,9 @@ export const initAudio = (): void => {
  * synchronous call stack. Without this, the AudioContext stays muted.
  */
 export const ensureAudioReady = (): void => {
+  // NativeAudio handles iOS audio session natively — no unlock needed
+  if (isNativeAudioReady()) return;
+
   createContext();
   if (!audioContext) return;
 
@@ -89,8 +94,10 @@ export const ensureAudioReady = (): void => {
  * @param level - 0.0 (silent) to 1.0 (full volume)
  */
 export const setVolume = (level: number): void => {
+  const clamped = Math.max(0, Math.min(1, level));
+  setNativeVolume(clamped);
   if (masterGain) {
-    masterGain.gain.value = Math.max(0, Math.min(1, level));
+    masterGain.gain.value = clamped;
   }
 };
 
@@ -99,10 +106,18 @@ export const setVolume = (level: number): void => {
  * @returns Current volume between 0.0 and 1.0
  */
 export const getVolume = (): number => {
+  if (isNativeAudioReady()) return getNativeVolume();
   return masterGain ? masterGain.gain.value : 0.7;
 };
 
 export const playNote = (noteName: string, duration = 1.5) => {
+  // Use NativeAudio on iOS for reliable playback.
+  // NativeAudio with audioChannelNum:1 auto-restarts on play(), no stop needed.
+  if (isNativeAudioReady()) {
+    playNativeNote(noteName);
+    return;
+  }
+
   // Callers must call ensureAudioReady() synchronously in their tap handler
   // before calling playNote. That's the only way iOS WKWebView unlocks audio.
   if (!audioContext) {
@@ -203,6 +218,11 @@ export const playNote = (noteName: string, duration = 1.5) => {
  * Called on key release for realistic piano behavior.
  */
 export const stopNote = (noteName: string): void => {
+  if (isNativeAudioReady()) {
+    stopNativeNote(noteName);
+    return;
+  }
+
   const active = activeNotes.get(noteName);
   if (!active || !audioContext) return;
 
@@ -236,6 +256,10 @@ let sequenceCancelled = false;
  */
 export const stopSequence = (): void => {
   sequenceCancelled = true;
+  if (isNativeAudioReady()) {
+    stopAllNativeNotes();
+    return;
+  }
   // Stop all currently sounding notes
   for (const noteName of activeNotes.keys()) {
     stopNote(noteName);
@@ -258,32 +282,35 @@ export const playSequence = async (notes: string[], bpm: number = 100, durations
   sequenceCancelled = false;
   const quarterMs = 60000 / bpm;
 
-  // Ensure AudioContext exists (caller should have called ensureAudioReady()
-  // synchronously in their tap handler, but guard against missing context)
-  if (!audioContext) createContext();
-  if (!audioContext) return;
+  // NativeAudio doesn't need AudioContext — skip all Web Audio setup
+  if (!isNativeAudioReady()) {
+    // Ensure AudioContext exists (caller should have called ensureAudioReady()
+    // synchronously in their tap handler, but guard against missing context)
+    if (!audioContext) createContext();
+    if (!audioContext) return;
 
-  // On iOS WKWebView, resume() + silent buffer unlock initiated by
-  // ensureAudioReady() is async. The context transitions to 'running'
-  // some time after the synchronous gesture handler completes.
-  // We must NOT call resume() again here (outside the gesture stack,
-  // iOS ignores it). Instead, poll until the gesture handler's resume()
-  // takes effect.
-  if (audioContext.state !== 'running') {
-    await new Promise<void>((resolve) => {
-      const interval = setInterval(() => {
-        if (!audioContext || audioContext.state === 'running') {
-          clearInterval(interval);
-          resolve();
-        }
-      }, 10);
-      // Don't hang forever if the context never unlocks
-      setTimeout(() => { clearInterval(interval); resolve(); }, 1000);
-    });
+    // On iOS WKWebView, resume() + silent buffer unlock initiated by
+    // ensureAudioReady() is async. The context transitions to 'running'
+    // some time after the synchronous gesture handler completes.
+    // We must NOT call resume() again here (outside the gesture stack,
+    // iOS ignores it). Instead, poll until the gesture handler's resume()
+    // takes effect.
+    if (audioContext.state !== 'running') {
+      await new Promise<void>((resolve) => {
+        const interval = setInterval(() => {
+          if (!audioContext || audioContext.state === 'running') {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 10);
+        // Don't hang forever if the context never unlocks
+        setTimeout(() => { clearInterval(interval); resolve(); }, 1000);
+      });
+    }
+
+    // Context never reached 'running' — no sound possible
+    if (!audioContext || audioContext.state !== 'running') return;
   }
-
-  // Context never reached 'running' — no sound possible
-  if (!audioContext || audioContext.state !== 'running') return;
 
   for (let i = 0; i < notes.length; i++) {
     if (sequenceCancelled) return;
